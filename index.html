@@ -55,7 +55,7 @@
   <button id="launch" class="chat-launch">💬 Chat</button>
 
   <script>
-    const BACKEND_URL = "https://agent-backend.your-subdomain.workers.dev"; // <-- replace me
+    const BACKEND_URL = "https://agent-backend.mail4sergiu.workers.dev/"; // <-- replace me
 
     const widget = document.getElementById('widget');
     const launch = document.getElementById('launch');
@@ -129,7 +129,7 @@ Links you can use:
         showWidget(true);
         // Optional: auto-send a first message tuned by source
         const who = ref.includes('github') || src==='github' ? 'GitHub' : 'LinkedIn';
-        chat(`I’m a recruiter coming from ${who}. I’m hiring for a Senior Backend role; show me 2–3 matching projects with code links and impact.`);
+        chat(`I’m a recruiter coming from ${who}. I’m hiring for an AI/ML engineer role; show me 2–3 matching projects with code links and impact.`);
       }
     })();
   </script>
