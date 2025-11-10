@@ -3,36 +3,111 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sergiu – Guided Tour</title>
+  <title>Sergiu – AI/ML Portfolio Guided Tour</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 0; }
-    header { padding: 24px; border-bottom: 1px solid #eee; }
-    .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
-    .chat-launch { position: fixed; right: 20px; bottom: 20px; border: 0; padding: 12px 16px; border-radius: 999px; box-shadow: 0 4px 20px rgba(0,0,0,.1); cursor: pointer; }
-    .widget { position: fixed; right: 20px; bottom: 80px; width: 360px; height: 520px; border: 1px solid #e5e5e5; border-radius: 16px; background: #fff; display: none; box-shadow: 0 10px 40px rgba(0,0,0,.15); }
-    .widget header { border-bottom: 1px solid #eee; padding: 12px 16px; font-weight: 600; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(circle at 20% 20%, #0d1117 0%, #0b0f14 45%, #06080a 100%);
+      color: #e6e6e6;
+    }
+
+    header {
+      padding: 32px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(6px);
+    }
+
+    a { color: #7cb7ff; text-decoration: none; }
+
+    .wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    .pill {
+      display:inline-block;
+      padding:6px 12px;
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:999px;
+      margin-right:6px;
+      font-size:12px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    h1, h2 { color: #fff; }
+
+    ul li { margin-bottom: 12px; line-height: 1.5; }
+
+    /* Chat widget */
+    .chat-launch {
+      position: fixed; right: 20px; bottom: 20px;
+      border: 0; padding: 12px 16px;
+      border-radius: 999px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.6);
+      cursor: pointer;
+      background: #0ea5e9; color: #fff; font-weight: 600;
+    }
+
+    .widget {
+      position: fixed; right: 20px; bottom: 80px;
+      width: 360px; height: 520px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      background: rgba(24, 27, 33, 0.95);
+      display: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,.6);
+      backdrop-filter: blur(8px);
+      color: #e6e6e6;
+    }
+
+    .widget header {
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 12px 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+
     .widget .messages { height: 400px; overflow-y: auto; padding: 12px 16px; }
-    .widget .input { display: flex; border-top: 1px solid #eee; }
-    .widget .input input { flex: 1; padding: 12px; border: 0; }
-    .widget .input button { border: 0; padding: 0 16px; cursor: pointer; }
+
+    .widget .input { display: flex; border-top: 1px solid rgba(255,255,255,0.08); }
+
+    .widget .input input {
+      flex: 1; padding: 12px;
+      border: 0;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+
+    .widget .input button {
+      border: 0; padding: 0 16px;
+      cursor: pointer;
+      background: #0ea5e9; color: #fff;
+    }
+
     .msg { margin: 8px 0; }
     .msg.you { text-align: right; }
-    .msg .bubble { display: inline-block; padding: 10px 12px; border-radius: 12px; max-width: 85%; }
-    .msg.you .bubble { background: #f1f5ff; }
-    .msg.ai .bubble { background: #f7f7f7; }
-    .pill { display:inline-block; padding:4px 8px; border:1px solid #ddd; border-radius:999px; margin-right:6px; font-size:12px; }
+
+    .msg .bubble {
+      display: inline-block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      max-width: 85%;
+    }
+
+    .msg.you .bubble { background: #0f2036; color:#cfe2ff; }
+    .msg.ai .bubble { background: #1e242d; color:#e6e6e6; }
   </style>
 </head>
 <body>
   <header class="wrap">
     <h1>Sergiu</h1>
-    <p>Software developer • AI specialist • <a href="https://github.com/sergiu123456789">GitHub</a> • <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a></p>
-    <p>Welcome! This page hosts my <strong>guided tour agent</strong>. If you came from GitHub or LinkedIn, the tour will auto-start. Otherwise, click the chat button ↘️</p>
+    <p>AI/ML Engineer • Software Developer • <a href="https://github.com/sergiu123456789">GitHub</a> • <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a></p>
+    <p>This page hosts my <strong>AI-powered guided tour agent</strong>. Recruiters arriving from GitHub or LinkedIn will start the tour automatically. Otherwise, use the chat button to explore my AI/ML portfolio.</p>
+
     <div>
       <span class="pill">Machine Learning Engineering</span>
       <span class="pill">LLM Agents & Automations</span>
       <span class="pill">Deep Learning & NLP</span>
-      <span class="pill">MLOps & Model Deployment</span>
+      <span class="pill">MLOps & Deployment</span>
       <span class="pill">Cloud AI (AWS / OCI / GCP)</span>
     </div>
   </header>
@@ -40,9 +115,9 @@
   <main class="wrap">
     <h2>Highlighted Projects</h2>
     <ul>
-      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">RAG Q&A Chatbot</a> Document-grounded chatbot using embeddings and retrieval for precise answers.</li>
-      <li><a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen, LangGraph and CrewAI</a> Multi-agent task orchestration</li>
-      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md"> Character AI Chatbot Using OpenAI API</a> Interactive chatbot with a custom personality for realistic and engaging role-play conversations </li>
+      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">RAG Q&A Chatbot</a> — Document-grounded chatbot using embeddings and retrieval pipelines for accurate answers.</li>
+      <li><a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen, LangGraph & CrewAI</a> — Multi-agent automation frameworks for structured reasoning and task orchestration.</li>
+      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">Character AI Chatbot</a> — Personality-driven conversational agent powered by the OpenAI API.</li>
     </ul>
   </main>
 
@@ -50,14 +125,14 @@
     <header>Recruiter Tour Agent</header>
     <div id="msgs" class="messages"></div>
     <div class="input">
-      <input id="inp" placeholder="Ask about projects, impact, team fit…" />
+      <input id="inp" placeholder="Ask about projects, outcomes, deployment, impact…" />
       <button id="send">Send</button>
     </div>
   </div>
   <button id="launch" class="chat-launch">💬 Chat</button>
 
   <script>
-    const BACKEND_URL = "https://agent-backend.mail4sergiu.workers.dev/"; // <-- replace me
+    const BACKEND_URL = "https://agent-backend.mail4sergiu.workers.dev/";
 
     const widget = document.getElementById('widget');
     const launch = document.getElementById('launch');
@@ -69,10 +144,10 @@
       widget.style.display = 'block';
       if (openIntro && !widget.dataset.welcomed) {
         widget.dataset.welcomed = "1";
-        addAI(`Hi! I’m your guided-tour agent. Tell me the role you’re hiring for, and I’ll walk you through the most relevant projects, code samples, and impact numbers. 
-I can also generate a tailored summary for your ATS or a role-fit email.`);
+        addAI(`Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio. Tell me what role you're hiring for, and I will surface the most relevant projects and impact details.`);
       }
     }
+
     function addMsg(cls, text) {
       const d = document.createElement('div');
       d.className = 'msg ' + cls;
@@ -80,6 +155,7 @@ I can also generate a tailored summary for your ATS or a role-fit email.`);
       msgs.appendChild(d);
       msgs.scrollTop = msgs.scrollHeight;
     }
+
     const addYou = (t) => addMsg('you', t);
     const addAI = (t) => addMsg('ai', t);
 
@@ -88,19 +164,16 @@ I can also generate a tailored summary for your ATS or a role-fit email.`);
 
       const system = {
         role: "system",
-        content: `You are a recruiter-facing portfolio guide for "Sergiu".
-- Quickly elicit the role and top criteria.
-- Route to the most relevant 2–3 projects with 1–2 punchy impact bullets each.
-- Offer a tailored summary (ATS-ready) and a short follow-up email draft.
-- If referrer is GitHub: highlight code quality and repos. If LinkedIn: highlight outcomes and leadership.
-Links you can use:
-- Project A: https://github.com/sergiu123456789/project-A
-- Project B: https://github.com/sergiu123456789/project-B
-- Case Study: https://yourname.github.io/case-study`
-      };
-
+        content: `You are a recruiter-facing portfolio guide for \"Sergiu\".
+- Identify the recruiter's role.
+- Highlight 2–3 relevant AI/ML projects with concise impact bullets.
+- Offer ATS-friendly summary and short follow-up email drafts.
+- If referrer is GitHub: emphasize code quality. If LinkedIn: emphasize impact.
+Links to reference:
+- RAG Project: https://github.com/sergiu123456789/Generative-AI
+- Agentic AI: https://github.com/sergiu123456789/Agentic-AI` }
       const ref = document.referrer || new URLSearchParams(location.search).get('src') || '';
-      const contextMsg = { role: "user", content: `Visitor context: referrer="${ref}".` };
+      const contextMsg = { role: "user", content: `Visitor context: referrer=\"${ref}\".` };
       const userMsg = { role: "user", content: userText };
 
       addAI("Thinking…");
@@ -111,11 +184,11 @@ Links you can use:
         body: JSON.stringify({ messages: [system, contextMsg, userMsg] })
       });
 
-      msgs.lastChild.remove(); // remove "Thinking…"
-      if (!r.ok) return addAI("Hmm, something went wrong. Try again in a moment.");
+      msgs.lastChild.remove();
+      if (!r.ok) return addAI("Something went wrong. Please try again.");.ok) return addAI("Something went wrong. Please try again.");
 
       const data = await r.json();
-      const text = data.choices?.[0]?.message?.content || "(no reply)";
+      const text = data.choices?.[0]?.message?.content || "(no response)";
       addAI(text);
     }
 
@@ -123,15 +196,36 @@ Links you can use:
     inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && inp.value.trim()){ chat(inp.value.trim()); inp.value=''; }});
     launch.onclick = () => showWidget();
 
-    // Auto-open if they came from GitHub/LinkedIn or you passed ?src=
     (function autoOpen() {
       const ref = (document.referrer || "").toLowerCase();
       const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
       if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
         showWidget(true);
-        // Optional: auto-send a first message tuned by source
         const who = ref.includes('github') || src==='github' ? 'GitHub' : 'LinkedIn';
-        chat(`I’m a recruiter coming from ${who}. I’m hiring for an AI/ML engineer role; show me 2–3 matching projects with code links and impact.`);
+        chat(`I am a recruiter coming from ${who}. Show me 2–3 relevant AI/ML projects with impact.`);
+      }
+    })();();
+      if (!r
+
+      msgs.lastChild.remove();
+      if (!r.ok) return addAI("Something went wrong. Please try again.");
+
+      const data = await r.json();
+      const text = data.choices?.[0]?.message?.content || "(no response)";
+      addAI(text);
+    }
+
+    send.onclick = () => { if (inp.value.trim()) { chat(inp.value.trim()); inp.value=''; }};
+    inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && inp.value.trim()){ chat(inp.value.trim()); inp.value=''; }});
+    launch.onclick = () => showWidget();
+
+    (function autoOpen() {
+      const ref = (document.referrer || "").toLowerCase();
+      const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
+      if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
+        showWidget(true);
+        const who = ref.includes('github') || src==='github' ? 'GitHub' : 'LinkedIn';
+        chat(`I am a recruiter coming from ${who}. Show me 2–3 relevant AI/ML projects with impact.`);
       }
     })();
   </script>
