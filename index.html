@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Your Name – Guided Tour</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 0; }
+    header { padding: 24px; border-bottom: 1px solid #eee; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .chat-launch { position: fixed; right: 20px; bottom: 20px; border: 0; padding: 12px 16px; border-radius: 999px; box-shadow: 0 4px 20px rgba(0,0,0,.1); cursor: pointer; }
+    .widget { position: fixed; right: 20px; bottom: 80px; width: 360px; height: 520px; border: 1px solid #e5e5e5; border-radius: 16px; background: #fff; display: none; box-shadow: 0 10px 40px rgba(0,0,0,.15); }
+    .widget header { border-bottom: 1px solid #eee; padding: 12px 16px; font-weight: 600; }
+    .widget .messages { height: 400px; overflow-y: auto; padding: 12px 16px; }
+    .widget .input { display: flex; border-top: 1px solid #eee; }
+    .widget .input input { flex: 1; padding: 12px; border: 0; }
+    .widget .input button { border: 0; padding: 0 16px; cursor: pointer; }
+    .msg { margin: 8px 0; }
+    .msg.you { text-align: right; }
+    .msg .bubble { display: inline-block; padding: 10px 12px; border-radius: 12px; max-width: 85%; }
+    .msg.you .bubble { background: #f1f5ff; }
+    .msg.ai .bubble { background: #f7f7f7; }
+    .pill { display:inline-block; padding:4px 8px; border:1px solid #ddd; border-radius:999px; margin-right:6px; font-size:12px; }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <h1>Your Name</h1>
+    <p>Senior XYZ • Building ABC • <a href="https://github.com/yourname">GitHub</a> • <a href="https://www.linkedin.com/in/yourname">LinkedIn</a></p>
+    <p>Welcome! This page hosts my <strong>guided tour agent</strong>. If you came from GitHub or LinkedIn, the tour will auto-start. Otherwise, click the chat button ↘️</p>
+    <div>
+      <span class="pill">Systems</span>
+      <span class="pill">LLM Agents</span>
+      <span class="pill">MLOps</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h2>Highlighted Projects</h2>
+    <ul>
+      <li><a href="https://github.com/yourname/project-A">Project A</a> – brief one-line value</li>
+      <li><a href="https://github.com/yourname/project-B">Project B</a> – brief one-line value</li>
+      <li><a href="https://yourname.github.io/case-study">Case Study</a> – measurable impact</li>
+    </ul>
+  </main>
+
+  <div id="widget" class="widget" aria-live="polite" aria-label="Recruiter guided tour chat">
+    <header>Recruiter Tour Agent</header>
+    <div id="msgs" class="messages"></div>
+    <div class="input">
+      <input id="inp" placeholder="Ask about projects, impact, team fit…" />
+      <button id="send">Send</button>
+    </div>
+  </div>
+  <button id="launch" class="chat-launch">💬 Chat</button>
+
+  <script>
+    const BACKEND_URL = "https://agent-backend.your-subdomain.workers.dev"; // <-- replace me
+
+    const widget = document.getElementById('widget');
+    const launch = document.getElementById('launch');
+    const msgs = document.getElementById('msgs');
+    const inp = document.getElementById('inp');
+    const send = document.getElementById('send');
+
+    function showWidget(openIntro=true) {
+      widget.style.display = 'block';
+      if (openIntro && !widget.dataset.welcomed) {
+        widget.dataset.welcomed = "1";
+        addAI(`Hi! I’m your guided-tour agent. Tell me the role you’re hiring for, and I’ll walk you through the most relevant projects, code samples, and impact numbers. 
+I can also generate a tailored summary for your ATS or a role-fit email.`);
+      }
+    }
+    function addMsg(cls, text) {
+      const d = document.createElement('div');
+      d.className = 'msg ' + cls;
+      d.innerHTML = `<div class="bubble">${text.replace(/\n/g,'<br/>')}</div>`;
+      msgs.appendChild(d);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    const addYou = (t) => addMsg('you', t);
+    const addAI = (t) => addMsg('ai', t);
+
+    async function chat(userText) {
+      addYou(userText);
+
+      const system = {
+        role: "system",
+        content: `You are a recruiter-facing portfolio guide for "Your Name".
+- Quickly elicit the role and top criteria.
+- Route to the most relevant 2–3 projects with 1–2 punchy impact bullets each.
+- Offer a tailored summary (ATS-ready) and a short follow-up email draft.
+- If referrer is GitHub: highlight code quality and repos. If LinkedIn: highlight outcomes and leadership.
+Links you can use:
+- Project A: https://github.com/yourname/project-A
+- Project B: https://github.com/yourname/project-B
+- Case Study: https://yourname.github.io/case-study`
+      };
+
+      const ref = document.referrer || new URLSearchParams(location.search).get('src') || '';
+      const contextMsg = { role: "user", content: `Visitor context: referrer="${ref}".` };
+      const userMsg = { role: "user", content: userText };
+
+      addAI("Thinking…");
+
+      const r = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [system, contextMsg, userMsg] })
+      });
+
+      msgs.lastChild.remove(); // remove "Thinking…"
+      if (!r.ok) return addAI("Hmm, something went wrong. Try again in a moment.");
+
+      const data = await r.json();
+      const text = data.choices?.[0]?.message?.content || "(no reply)";
+      addAI(text);
+    }
+
+    send.onclick = () => { if (inp.value.trim()) { chat(inp.value.trim()); inp.value=''; }};
+    inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && inp.value.trim()){ chat(inp.value.trim()); inp.value=''; }});
+    launch.onclick = () => showWidget();
+
+    // Auto-open if they came from GitHub/LinkedIn or you passed ?src=
+    (function autoOpen() {
+      const ref = (document.referrer || "").toLowerCase();
+      const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
+      if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
+        showWidget(true);
+        // Optional: auto-send a first message tuned by source
+        const who = ref.includes('github') || src==='github' ? 'GitHub' : 'LinkedIn';
+        chat(`I’m a recruiter coming from ${who}. I’m hiring for a Senior Backend role; show me 2–3 matching projects with code links and impact.`);
+      }
+    })();
+  </script>
+</body>
+</html>
