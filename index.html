@@ -132,102 +132,83 @@
   <button id="launch" class="chat-launch">💬 Chat</button>
 
   <script>
-    const BACKEND_URL = "https://agent-backend.mail4sergiu.workers.dev/";
+  const BACKEND_URL = "https://agent-backend.mail4sergiu.workers.dev/";
 
-    const widget = document.getElementById('widget');
-    const launch = document.getElementById('launch');
-    const msgs = document.getElementById('msgs');
-    const inp = document.getElementById('inp');
-    const send = document.getElementById('send');
+  const widget = document.getElementById('widget');
+  const launch = document.getElementById('launch');
+  const msgs = document.getElementById('msgs');
+  const inp = document.getElementById('inp');
+  const send = document.getElementById('send');
 
-    function showWidget(openIntro=true) {
-      widget.style.display = 'block';
-      if (openIntro && !widget.dataset.welcomed) {
-        widget.dataset.welcomed = "1";
-        addAI(`Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio. Tell me what role you're hiring for, and I will surface the most relevant projects and impact details.`);
-      }
+  function showWidget(openIntro = true) {
+    widget.style.display = 'block';
+    if (openIntro && !widget.dataset.welcomed) {
+      widget.dataset.welcomed = "1";
+      addAI(`Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio.`);
     }
+  }
 
-    function addMsg(cls, text) {
-      const d = document.createElement('div');
-      d.className = 'msg ' + cls;
-      d.innerHTML = `<div class="bubble">${text.replace(/\n/g,'<br/>')}</div>`;
-      msgs.appendChild(d);
-      msgs.scrollTop = msgs.scrollHeight;
+  function addMsg(cls, text) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  const addYou = (t) => addMsg('you', t);
+  const addAI = (t) => addMsg('ai', t);
+
+  async function chat(userText) {
+    addYou(userText);
+
+    const system = { role: "system", content: "…" };
+    const contextMsg = { role: "user", content: "…" };
+    const userMsg = { role: "user", content: userText };
+
+    addAI("Thinking…");
+
+    const r = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: [system, contextMsg, userMsg] })
+    });
+
+    msgs.lastChild.remove();
+
+    if (!r.ok) return addAI("Something went wrong. Please try again.");
+
+    const data = await r.json();
+    const text = data.choices?.[0]?.message?.content || "(no response)";
+    addAI(text);
+  }
+
+  send.onclick = () => {
+    if (inp.value.trim()) {
+      chat(inp.value.trim());
+      inp.value = '';
     }
+  };
 
-    const addYou = (t) => addMsg('you', t);
-    const addAI = (t) => addMsg('ai', t);
-
-    async function chat(userText) {
-      addYou(userText);
-
-      const system = {
-        role: "system",
-        content: `You are a recruiter-facing portfolio guide for \"Sergiu\".
-- Identify the recruiter's role.
-- Highlight 2–3 relevant AI/ML projects with concise impact bullets.
-- Offer ATS-friendly summary and short follow-up email drafts.
-- If referrer is GitHub: emphasize code quality. If LinkedIn: emphasize impact.
-Links to reference:
-- RAG Project: https://github.com/sergiu123456789/Generative-AI
-- Agentic AI: https://github.com/sergiu123456789/Agentic-AI` }
-      const ref = document.referrer || new URLSearchParams(location.search).get('src') || '';
-      const contextMsg = { role: "user", content: `Visitor context: referrer=\"${ref}\".` };
-      const userMsg = { role: "user", content: userText };
-
-      addAI("Thinking…");
-
-      const r = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [system, contextMsg, userMsg] })
-      });
-
-      msgs.lastChild.remove();
-      if (!r.ok) return addAI("Something went wrong. Please try again.");.ok) return addAI("Something went wrong. Please try again.");
-
-      const data = await r.json();
-      const text = data.choices?.[0]?.message?.content || "(no response)";
-      addAI(text);
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && inp.value.trim()) {
+      chat(inp.value.trim());
+      inp.value = '';
     }
+  });
 
-    send.onclick = () => { if (inp.value.trim()) { chat(inp.value.trim()); inp.value=''; }};
-    inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && inp.value.trim()){ chat(inp.value.trim()); inp.value=''; }});
-    launch.onclick = () => showWidget();
+  launch.onclick = () => showWidget();
 
-    (function autoOpen() {
-      const ref = (document.referrer || "").toLowerCase();
-      const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
-      if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
-        showWidget(true);
-        const who = ref.includes('github') || src==='github' ? 'GitHub' : 'LinkedIn';
-        chat(`I am a recruiter coming from ${who}. Show me 2–3 relevant AI/ML projects with impact.`);
-      }
-    })();();
-      if (!r
+  (function autoOpen() {
+    const ref = (document.referrer || "").toLowerCase();
+    const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
+    if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
+      showWidget(true);
 
-      msgs.lastChild.remove();
-      if (!r.ok) return addAI("Something went wrong. Please try again.");
-
-      const data = await r.json();
-      const text = data.choices?.[0]?.message?.content || "(no response)";
-      addAI(text);
+      const who = ref.includes('github') || src === 'github' ? 'GitHub' : 'LinkedIn';
+      chat(`I am a recruiter coming from ${who}. Show me relevant AI/ML projects.`);
     }
-
-    send.onclick = () => { if (inp.value.trim()) { chat(inp.value.trim()); inp.value=''; }};
-    inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && inp.value.trim()){ chat(inp.value.trim()); inp.value=''; }});
-    launch.onclick = () => showWidget();
-
-    (function autoOpen() {
-      const ref = (document.referrer || "").toLowerCase();
-      const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
-      if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
-        showWidget(true);
-        const who = ref.includes('github') || src==='github' ? 'GitHub' : 'LinkedIn';
-        chat(`I am a recruiter coming from ${who}. Show me 2–3 relevant AI/ML projects with impact.`);
-      }
-    })();
-  </script>
+  })();
+</script>
 </body>
 </html>
