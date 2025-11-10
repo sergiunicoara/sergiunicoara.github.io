@@ -162,8 +162,8 @@
   async function chat(userText) {
     addYou(userText);
 
-    const system = { role: "system", content: "…" };
-    const contextMsg = { role: "user", content: "…" };
+    const system = { role: "system", content: "You are a recruiter-facing guide for Sergiu's AI/ML portfolio." };
+    const contextMsg = { role: "user", content: "Visitor context active." };
     const userMsg = { role: "user", content: userText };
 
     addAI("Thinking…");
@@ -204,7 +204,6 @@
     const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
     if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
       showWidget(true);
-
       const who = ref.includes('github') || src === 'github' ? 'GitHub' : 'LinkedIn';
       chat(`I am a recruiter coming from ${who}. Show me relevant AI/ML projects.`);
     }
