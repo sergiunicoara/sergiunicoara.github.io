@@ -1,31 +1,257 @@
 [
   {
-    "title": "Customized Chatbot with RAG",
-    "repo": "Generative-AI",
-    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Generative-AI/main/%23%20Customized%20Chatbot%20with%20RAG.md",
-    "tags": ["RAG", "Embeddings", "Retrieval"],
-    "summary": "Document-grounded chatbot using embeddings + retrieval for precise answers."
+    "title": "Decision Tree Regression",
+    "repo": "Regression",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Regression/main/Decision%20Tree%20Regression%20Problem.md",
+    "tags": ["Regression", "Decision Trees"],
+    "summary": "Predictive regression model using decision tree-based splits."
   },
   {
-    "title": "Calorie Tracker from Image (Vision)",
-    "repo": "Generative-AI",
-    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Generative-AI/main/%23%20%F0%9F%A5%97%20Calorie%20Tracker%20from%20Image%20Using%20OpenAI%20Vision%20GPT.md",
-    "tags": ["Computer Vision", "OpenAI", "OCR"],
-    "summary": "Estimates calories from food images using Vision models."
+    "title": "Linear Regression",
+    "repo": "Regression",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Regression/main/Linear%20Regression.md",
+    "tags": ["Regression"],
+    "summary": "Basic linear regression model with interpretation."
   },
   {
-    "title": "Character AI Chatbot",
-    "repo": "Generative-AI",
-    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Generative-AI/main/Character%20AI%20Chatbot.md",
-    "tags": ["OpenAI API", "Prompt Engineering"],
-    "summary": "Interactive role-play chatbot using custom personality prompts."
+    "title": "Multiple Linear Regression",
+    "repo": "Regression",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Regression/main/Multiple%20Linear%20Regression.md",
+    "tags": ["Regression"],
+    "summary": "Multi-feature linear regression and parameter estimation."
   },
   {
-    "title": "AutoGen / LangGraph / CrewAI Agents",
+    "title": "Polynomial Regression",
+    "repo": "Regression",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Regression/main/Polynomial%20Regression%20Problem.md",
+    "tags": ["Regression"],
+    "summary": "Nonlinear regression using polynomial feature expansion."
+  },
+  {
+    "title": "Random Forest Regression",
+    "repo": "Regression",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Regression/main/Random%20Forest%20Regression%20Problem.md",
+    "tags": ["Regression", "Ensemble"],
+    "summary": "Random Forest Regression for nonlinear predictive modeling."
+  },
+  {
+    "title": "SageMaker Linear Regression",
+    "repo": "Regression",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Regression/main/SageMaker%20Linear%20Regression.md",
+    "tags": ["AWS", "SageMaker"],
+    "summary": "Implementation of linear regression using AWS SageMaker."
+  },
+  {
+    "title": "Support Vector Regression",
+    "repo": "Regression",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Regression/main/Support%20Vector%20Regression%20-%20Validating%20Salary%20Expectations.md",
+    "tags": ["SVR", "Regression"],
+    "summary": "Support Vector Regression applied to salary prediction."
+  },
+
+  {
+    "title": "Decision Tree Classification",
+    "repo": "Classification",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Classification/main/Decision%20Tree%20Classification.md",
+    "tags": ["Classification", "Decision Tree"],
+    "summary": "Tree-based classification analysis."
+  },
+  {
+    "title": "KNN Classification",
+    "repo": "Classification",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Classification/main/K-Nearest%20Neighbors%20(KNN)%20Problem.md",
+    "tags": ["Classification", "KNN"],
+    "summary": "KNN classification with distance-weighted predictions."
+  },
+  {
+    "title": "Logistic Regression Classification",
+    "repo": "Classification",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Classification/main/Logistic%20Regression%20Problem.md",
+    "tags": ["Classification", "Logistic Regression"],
+    "summary": "Binary classifier using logistic regression."
+  },
+  {
+    "title": "Naive Bayes Classification",
+    "repo": "Classification",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Classification/main/Naive%20Bayes%20Classification.md",
+    "tags": ["Classification", "Naive Bayes"],
+    "summary": "Probability-based classification using Naive Bayes."
+  },
+  {
+    "title": "Random Forest Classification",
+    "repo": "Classification",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Classification/main/Random%20Forest%20Classification.md",
+    "tags": ["Classification", "Ensemble"],
+    "summary": "Random Forest classifier with multi-feature evaluation."
+  },
+  {
+    "title": "SVM Classification",
+    "repo": "Classification",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Classification/main/SVM%20Classification%20Problem.md",
+    "tags": ["SVM", "Classification"],
+    "summary": "Support Vector Machine applied to classification tasks."
+  },
+  {
+    "title": "SVM RBF Kernel Classification",
+    "repo": "Classification",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Classification/main/Support%20Vector%20Machine%20(SVM)%20rbf%20kernel%20Problem.md",
+    "tags": ["SVM", "RBF"],
+    "summary": "SVM classifier using the RBF kernel."
+  },
+
+  {
+    "title": "Hierarchical Clustering",
+    "repo": "Clustering",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Clustering/main/Hierarchical%20Clustering.md",
+    "tags": ["Clustering"],
+    "summary": "Unsupervised clustering using hierarchical methods."
+  },
+  {
+    "title": "K-Means Clustering",
+    "repo": "Clustering",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Clustering/main/K-Means%20Clustering.md",
+    "tags": ["Clustering"],
+    "summary": "K-Means clustering for unsupervised grouping."
+  },
+
+  {
+    "title": "Sentiment Analysis",
+    "repo": "Natural-language-processing-NLP",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Natural-language-processing-NLP/main/Sentiment%20Analysis.md",
+    "tags": ["NLP"],
+    "summary": "Basic sentiment classification using NLP preprocessing."
+  },
+
+  {
+    "title": "CNN Image Classification",
+    "repo": "DeepLearning",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/DeepLearning/main/CNN%20Classification%20Problem.md",
+    "tags": ["Deep Learning", "CNN", "Vision"],
+    "summary": "Convolutional Neural Network for image classification."
+  },
+  {
+    "title": "Artificial Neural Networks",
+    "repo": "DeepLearning",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/DeepLearning/main/Artificial%20Neural%20Networks.md",
+    "tags": ["Deep Learning", "ANN"],
+    "summary": "Fully connected ANN solving classification tasks."
+  },
+
+  {
+    "title": "AutoGen Agents",
     "repo": "Agentic-AI",
-    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Agentic-AI/main/README.md",
-    "tags": ["Agents", "Planning", "Tool Use"],
-    "summary": "Agent orchestration using AutoGen, LangGraph, and CrewAI."
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Agentic-AI/main/AutoGen.md",
+    "tags": ["Agents", "LLM Orchestration"],
+    "summary": "Task automation using AutoGen multi-agent framework."
+  },
+  {
+    "title": "CrewAI Agents",
+    "repo": "Agentic-AI",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Agentic-AI/main/CrewAI.md",
+    "tags": ["Agents"],
+    "summary": "CrewAI workflow orchestration using specialized agents."
+  },
+  {
+    "title": "LangGraph Agents",
+    "repo": "Agentic-AI",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Agentic-AI/main/LangGraph.md",
+    "tags": ["Agents", "Graph Workflows"],
+    "summary": "State-machine-driven agent orchestration via LangGraph."
+  },
+
+  {
+    "title": "DataRobot",
+    "repo": "No-code-low-code-ML",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/No-code-low-code-ML/main/DataRobot.md",
+    "tags": ["No-Code ML"],
+    "summary": "Machine learning modeling using DataRobot platform."
+  },
+  {
+    "title": "Vertex AI",
+    "repo": "No-code-low-code-ML",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/No-code-low-code-ML/main/Vertex%20AI.md",
+    "tags": ["Google Cloud", "Vertex AI"],
+    "summary": "Model training and evaluation using Google Vertex AI."
+  },
+
+  {
+    "title": "Thompson Sampling",
+    "repo": "Reinforcement-Learning",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Reinforcement-Learning/main/Thompson%20Sampling.md",
+    "tags": ["Reinforcement Learning"],
+    "summary": "Bandit algorithm using Bayesian Thompson Sampling."
+  },
+  {
+    "title": "Upper Confidence Bound (UCB)",
+    "repo": "Reinforcement-Learning",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Reinforcement-Learning/main/Upper%20Confidence%20Bound.md",
+    "tags": ["Reinforcement Learning"],
+    "summary": "UCB strategy for multi-armed bandit problems."
+  },
+
+  {
+    "title": "CatBoost",
+    "repo": "Model-selection-and-boosting",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Model-selection-and-boosting/main/CatBoost.md",
+    "tags": ["Boosting"],
+    "summary": "Gradient boosting with CatBoost algorithm."
+  },
+  {
+    "title": "Grid Search",
+    "repo": "Model-selection-and-boosting",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Model-selection-and-boosting/main/Grid_search.md",
+    "tags": ["Model Selection"],
+    "summary": "Hyperparameter search using grid search."
+  },
+  {
+    "title": "K-Fold Cross Validation",
+    "repo": "Model-selection-and-boosting",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Model-selection-and-boosting/main/K-fold-cross-validation.md",
+    "tags": ["Validation"],
+    "summary": "K-fold CV for robust model performance estimation."
+  },
+  {
+    "title": "XGBoost",
+    "repo": "Model-selection-and-boosting",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Model-selection-and-boosting/main/XGBoost.md",
+    "tags": ["Boosting", "XGBoost"],
+    "summary": "Extreme gradient boosting applied to prediction tasks."
+  },
+
+  {
+    "title": "Apriori",
+    "repo": "Association-rule-learning",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Association-rule-learning/main/Apriori.md",
+    "tags": ["Association Rules"],
+    "summary": "Apriori algorithm for market basket analysis."
+  },
+  {
+    "title": "Eclat",
+    "repo": "Association-rule-learning",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Association-rule-learning/main/Eclat.md",
+    "tags": ["Association Rules"],
+    "summary": "Eclat algorithm using vertical dataset format."
+  },
+
+  {
+    "title": "Linear Discriminant Analysis (LDA)",
+    "repo": "Dimensionality-reduction",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Dimensionality-reduction/main/Linear%20discriminant%20analysis.md",
+    "tags": ["Dimensionality Reduction"],
+    "summary": "LDA algorithm for supervised dimensionality reduction."
+  },
+  {
+    "title": "Kernel PCA",
+    "repo": "Dimensionality-reduction",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Dimensionality-reduction/main/Prediction%20using%20Kernel%20PCA.md",
+    "tags": ["Dimensionality Reduction", "Kernel Methods"],
+    "summary": "Nonlinear feature extraction using Kernel PCA."
+  },
+  {
+    "title": "PCA",
+    "repo": "Dimensionality-reduction",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Dimensionality-reduction/main/Principal%20Component%20Analysis%20PCA.md",
+    "tags": ["PCA"],
+    "summary": "Principal Component Analysis for feature compression."
   }
 ]
-
