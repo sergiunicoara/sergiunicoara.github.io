@@ -1,1 +1,31 @@
+[
+  {
+    "title": "Customized Chatbot with RAG",
+    "repo": "Generative-AI",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Generative-AI/main/%23%20Customized%20Chatbot%20with%20RAG.md",
+    "tags": ["RAG", "Embeddings", "Retrieval"],
+    "summary": "Document-grounded chatbot using embeddings + retrieval for precise answers."
+  },
+  {
+    "title": "Calorie Tracker from Image (Vision)",
+    "repo": "Generative-AI",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Generative-AI/main/%23%20%F0%9F%A5%97%20Calorie%20Tracker%20from%20Image%20Using%20OpenAI%20Vision%20GPT.md",
+    "tags": ["Computer Vision", "OpenAI", "OCR"],
+    "summary": "Estimates calories from food images using Vision models."
+  },
+  {
+    "title": "Character AI Chatbot",
+    "repo": "Generative-AI",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Generative-AI/main/Character%20AI%20Chatbot.md",
+    "tags": ["OpenAI API", "Prompt Engineering"],
+    "summary": "Interactive role-play chatbot using custom personality prompts."
+  },
+  {
+    "title": "AutoGen / LangGraph / CrewAI Agents",
+    "repo": "Agentic-AI",
+    "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Agentic-AI/main/README.md",
+    "tags": ["Agents", "Planning", "Tool Use"],
+    "summary": "Agent orchestration using AutoGen, LangGraph, and CrewAI."
+  }
+]
 
