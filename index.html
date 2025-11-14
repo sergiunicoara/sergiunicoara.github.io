@@ -1,182 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sergiu – AI/ML Portfolio Guided Tour</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(circle at 20% 20%, #0d1117 0%, #0b0f14 45%, #06080a 100%);
+      color: #e6e6e6;
+    }
+
+    header {
+      padding: 32px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(6px);
+    }
+
+    a { color: #7cb7ff; text-decoration: none; }
+
+    .wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    .pill {
+      display:inline-block;
+      padding:6px 12px;
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:999px;
+      margin-right:6px;
+      font-size:12px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    h1, h2 { color: #fff; }
+
+    ul li { margin-bottom: 12px; line-height: 1.5; }
+
+    /* Chat widget */
+    .chat-launch {
+      position: fixed; 
+      right: 20px; 
+      bottom: 20px;
+      border: 0; 
+      padding: 12px 16px;
+      border-radius: 999px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.6);
+      cursor: pointer;
+      background: #0ea5e9; 
+      color: #fff; 
+      font-weight: 600;
+    }
+
+    .widget {
+      position: fixed; 
+      right: 20px; 
+      bottom: 80px;
+      width: 360px; 
+      height: 520px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      background: rgba(24, 27, 33, 0.95);
+      display: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,.6);
+      backdrop-filter: blur(8px);
+      color: #e6e6e6;
+    }
+
+    .widget header {
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 12px 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .widget .messages { 
+      height: 400px; 
+      overflow-y: auto; 
+      padding: 12px 16px; 
+    }
+
+    .widget .input { 
+      display: flex; 
+      border-top: 1px solid rgba(255,255,255,0.08); 
+    }
+
+    .widget .input input {
+      flex: 1; 
+      padding: 12px;
+      border: 0;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+
+    .widget .input button {
+      border: 0; 
+      padding: 0 16px;
+      cursor: pointer;
+      background: #0ea5e9; 
+      color: #fff;
+    }
+
+    .msg { margin: 8px 0; }
+
+    .msg.you { text-align: right; }
+
+    .msg .bubble {
+      display: inline-block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      max-width: 85%;
+    }
+
+    .msg.you .bubble { background: #0f2036; color:#cfe2ff; }
+    .msg.ai .bubble { background: #1e242d; color:#e6e6e6; }
+  </style>
+</head>
+
+<body>
+  <header class="wrap">
+    <h1>Sergiu</h1>
+    <p>
+      AI/ML Engineer • Software Developer • 
+      <a href="https://github.com/sergiu123456789">GitHub</a> • 
+      <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a>
+    </p>
+    <p>
+      This page hosts my <strong>AI-powered guided tour agent</strong>. 
+      Recruiters arriving from GitHub or LinkedIn auto-start the tour. 
+      Others can click the chat button.
+    </p>
+
+    <div>
+      <span class="pill">Machine Learning Engineering</span>
+      <span class="pill">LLM Agents & Automations</span>
+      <span class="pill">Deep Learning & NLP</span>
+      <span class="pill">MLOps & Deployment</span>
+      <span class="pill">Cloud AI (AWS / OCI / GCP)</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h2>Highlighted Projects</h2>
+    <ul>
+      <li>
+        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">
+          RAG Q&A Chatbot
+        </a> — Retrieval-augmented generation with embeddings.
+      </li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Agentic-AI">
+          AutoGen, LangGraph & CrewAI
+        </a> — Multi-agent orchestration frameworks.
+      </li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">
+          Character AI Chatbot
+        </a> — Personality-driven conversational agent.
+      </li>
+    </ul>
+  </main>
+
+  <!-- CHAT WIDGET -->
+  <div id="widget" class="widget">
+    <header>Recruiter Tour Agent</header>
+    <div id="msgs" class="messages"></div>
+    <div class="input">
+      <input id="inp" placeholder="Ask about projects, outcomes, deployment, impact…" />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+  <button id="launch" class="chat-launch">💬 Chat</button>
+
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+/* ------------------------------------------------------------------
+   SUPER-SAFE WIDGET LOADER (fixes onclick=null, GitHub Pages timing)
+-------------------------------------------------------------------*/
+document.addEventListener("DOMContentLoaded", function () {
 
-  /* ------------------------------
-      BACKEND URL
-    --------------------------------*/
-  const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
+  function waitForElements() {
+    const widget = document.getElementById('widget');
+    const launch = document.getElementById('launch');
+    const msgs   = document.getElementById('msgs');
+    const inp    = document.getElementById('inp');
+    const send   = document.getElementById('send');
 
-  /* ------------------------------
-      SESSION ID
-    --------------------------------*/
-  let sessionId = localStorage.getItem("tourSessionId") || null;
-
-  /* ------------------------------
-      DETECT VISITOR SOURCE
-    --------------------------------*/
-  function detectSource() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const src = urlParams.get("src");
-
-    if (src === "github" || src === "linkedin") return src;
-
-    const ref = document.referrer.toLowerCase();
-    if (ref.includes("github.com")) return "github";
-    if (ref.includes("linkedin.com")) return "linkedin";
-
-    return "direct";
-  }
-
-  /* ------------------------------
-      UI ELEMENTS
-    --------------------------------*/
-  const widget = document.getElementById('widget');
-  const launch = document.getElementById('launch');
-  const msgs = document.getElementById('msgs');
-  const inp = document.getElementById('inp');
-  const send = document.getElementById('send');
-
-  /* ------------------------------
-      UI HANDLERS
-    --------------------------------*/
-  function showWidget(openIntro = true) {
-    widget.style.display = 'block';
-    if (openIntro && !widget.dataset.opened) {
-      widget.dataset.opened = "1";
-      addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
-    }
-  }
-
-  function addMsg(cls, text) {
-    const d = document.createElement('div');
-    d.className = 'msg ' + cls;
-    d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
-    msgs.appendChild(d);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  const addYou = (t) => addMsg('you', t);
-  const addAI = (t) => addMsg('ai', t);
-
-  /* ------------------------------
-      SMART ROLE + CRITERIA DETECTORS
-    --------------------------------*/
-  function detectRoleFromMessage(msg) {
-    msg = msg.toLowerCase();
-    const keywords = ["engineer", "scientist", "developer", "ml", "ai", "llm"];
-    if (msg.split(/\s+/).length <= 8) {
-      for (const kw of keywords) if (msg.includes(kw)) return msg.trim();
-    }
-    return null;
-  }
-
-  function detectCriteriaFromMessage(msg) {
-    msg = msg.toLowerCase();
-    if (msg.includes(",")) {
-      return msg.split(",").map(x => x.trim()).filter(Boolean);
-    }
-    const critWords = ["rag", "pipeline", "mlops", "ops", "deployment", "production", "scaling"];
-    for (const w of critWords) if (msg.includes(w)) return [msg.trim()];
-    return null;
-  }
-
-  /* ------------------------------
-      SEND MESSAGE TO BACKEND
-    --------------------------------*/
-  async function sendMessage(message) {
-    const source = detectSource();
-
-    let role = null;
-    let criteria = null;
-
-    const lastAI = msgs.querySelector('.msg.ai:last-child');
-    const lastText = lastAI ? lastAI.innerText.toLowerCase() : "";
-
-    if (lastText.includes("what role are you hiring for")) {
-      role = detectRoleFromMessage(message);
-    }
-    if (lastText.includes("top 2–3 evaluation criteria")) {
-      criteria = detectCriteriaFromMessage(message);
+    if (!widget || !launch || !msgs || !inp || !send) {
+      console.warn("⏳ Waiting for chat widget elements...");
+      return setTimeout(waitForElements, 50);
     }
 
-    const payload = {
-      session_id: sessionId,
-      message,
-      source,
-      role,
-      criteria
+    console.log("✅ Widget elements found. Initializing…");
+
+    /* ------------------------------ */
+    const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
+    let sessionId = localStorage.getItem("tourSessionId") || null;
+
+    function detectSource() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const src = urlParams.get("src");
+      if (src === "github" || src === "linkedin") return src;
+      const ref = document.referrer.toLowerCase();
+      if (ref.includes("github.com")) return "github";
+      if (ref.includes("linkedin.com")) return "linkedin";
+      return "direct";
+    }
+
+    function showWidget(openIntro = true) {
+      widget.style.display = 'block';
+      if (openIntro && !widget.dataset.opened) {
+        widget.dataset.opened = "1";
+        addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
+      }
+    }
+
+    function addMsg(cls, text) {
+      const d = document.createElement('div');
+      d.className = 'msg ' + cls;
+      d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
+      msgs.appendChild(d);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    const addYou = (t) => addMsg('you', t);
+    const addAI  = (t) => addMsg('ai',  t);
+
+    function detectRoleFromMessage(msg) {
+      msg = msg.toLowerCase();
+      const keywords = ["engineer", "scientist", "developer", "ml", "ai", "llm"];
+      if (msg.split(/\s+/).length <= 8) {
+        for (const kw of keywords)
+          if (msg.includes(kw)) return msg.trim();
+      }
+      return null;
+    }
+
+    function detectCriteriaFromMessage(msg) {
+      msg = msg.toLowerCase();
+      if (msg.includes(",")) {
+        return msg.split(",").map(x => x.trim()).filter(Boolean);
+      }
+      const crit = ["rag", "pipeline", "mlops", "ops", "deployment", "production", "scaling"];
+      for (const w of crit) if (msg.includes(w)) return [msg.trim()];
+      return null;
+    }
+
+    async function sendMessage(message) {
+      const source = detectSource();
+      let role = null;
+      let criteria = null;
+
+      const lastAI = msgs.querySelector('.msg.ai:last-child');
+      const lastText = lastAI ? lastAI.innerText.toLowerCase() : "";
+
+      if (lastText.includes("what role")) {
+        role = detectRoleFromMessage(message);
+      }
+      if (lastText.includes("criteria")) {
+        criteria = detectCriteriaFromMessage(message);
+      }
+
+      const payload = { session_id: sessionId, message, source, role, criteria };
+
+      addAI("Thinking…");
+
+      try {
+        const res = await fetch(BACKEND_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        msgs.removeChild(msgs.lastChild);
+
+        if (!res.ok) {
+          return addAI("⚠️ Something went wrong. Please try again.");
+        }
+
+        const data = await res.json();
+        sessionId = data.session_id;
+        localStorage.setItem("tourSessionId", sessionId);
+        addAI(data.reply);
+
+      } catch (err) {
+        msgs.removeChild(msgs.lastChild);
+        addAI("⚠️ Backend unreachable.");
+      }
+    }
+
+    send.onclick = () => {
+      if (inp.value.trim()) {
+        const msg = inp.value.trim();
+        addYou(msg);
+        sendMessage(msg);
+        inp.value = "";
+      }
     };
 
-    addAI("Thinking…");
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && inp.value.trim()) {
+        const msg = inp.value.trim();
+        addYou(msg);
+        sendMessage(msg);
+        inp.value = "";
+      }
+    });
 
-    try {
-      const res = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    launch.onclick = () => showWidget();
 
-      msgs.removeChild(msgs.lastChild);
+    (function autoOpen() {
+      const ref = document.referrer.toLowerCase();
+      const src = new URLSearchParams(location.search).get('src')?.toLowerCase();
 
-      if (!res.ok) return addAI("⚠️ Something went wrong. Please try again.");
+      const isRecruiter =
+        ref.includes("github.com") ||
+        ref.includes("linkedin.com") ||
+        src === "github" ||
+        src === "linkedin";
 
-      const data = await res.json();
-      sessionId = data.session_id;
-      localStorage.setItem("tourSessionId", sessionId);
-
-      addAI(data.reply);
-
-    } catch (err) {
-      msgs.removeChild(msgs.lastChild);
-      addAI("⚠️ I couldn't reach the backend. Please try again.");
-    }
+      if (isRecruiter) {
+        showWidget(true);
+        addAI("Hi! I'm your guided-tour agent.");
+        sendMessage("I am a recruiter from GitHub/LinkedIn. Show me relevant AI/ML projects.");
+      }
+    })();
   }
 
-  /* ------------------------------
-      SEND ACTIONS
-    --------------------------------*/
-  send.onclick = () => {
-    if (inp.value.trim()) {
-      const msg = inp.value.trim();
-      addYou(msg);
-      sendMessage(msg);
-      inp.value = "";
-    }
-  };
-
-  inp.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && inp.value.trim()) {
-      const msg = inp.value.trim();
-      addYou(msg);
-      sendMessage(msg);
-      inp.value = "";
-    }
-  });
-
-  /* ------------------------------
-      LAUNCH WIDGET
-    --------------------------------*/
-  launch.onclick = () => showWidget();
-
-  /* ------------------------------
-      AUTO-OPEN (GitHub / LinkedIn)
-    --------------------------------*/
-  (function autoOpen() {
-    const ref = document.referrer.toLowerCase();
-    const src = new URLSearchParams(location.search).get('src')?.toLowerCase();
-
-    const isRecruiter =
-      ref.includes("github.com") ||
-      ref.includes("linkedin.com") ||
-      src === "github" ||
-      src === "linkedin";
-
-    if (isRecruiter) {
-      showWidget(true);
-      addAI("Hi! I'm your guided-tour agent.");
-      sendMessage("I am a recruiter visiting from GitHub/LinkedIn. Show me relevant AI/ML projects.");
-    }
-  })();
-
+  waitForElements();
 });
 </script>
+
+</body>
+</html>
