@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sergiu – AI/ML Portfolio Guided Tour</title>
+
   <style>
     body {
       margin: 0;
@@ -39,17 +40,25 @@
 
     /* Chat widget */
     .chat-launch {
-      position: fixed; right: 20px; bottom: 20px;
-      border: 0; padding: 12px 16px;
+      position: fixed; 
+      right: 20px; 
+      bottom: 20px;
+      border: 0; 
+      padding: 12px 16px;
       border-radius: 999px;
       box-shadow: 0 4px 20px rgba(0,0,0,.6);
       cursor: pointer;
-      background: #0ea5e9; color: #fff; font-weight: 600;
+      background: #0ea5e9; 
+      color: #fff; 
+      font-weight: 600;
     }
 
     .widget {
-      position: fixed; right: 20px; bottom: 80px;
-      width: 360px; height: 520px;
+      position: fixed; 
+      right: 20px; 
+      bottom: 80px;
+      width: 360px; 
+      height: 520px;
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 16px;
       background: rgba(24, 27, 33, 0.95);
@@ -66,25 +75,40 @@
       color: #fff;
     }
 
-    .widget .messages { height: 400px; overflow-y: auto; padding: 12px 16px; }
+    .widget .messages { 
+      height: 400px; 
+      overflow-y: auto; 
+      padding: 12px 16px; 
+    }
 
-    .widget .input { display: flex; border-top: 1px solid rgba(255,255,255,0.08); }
+    .widget .input { 
+      display: flex; 
+      border-top: 1px solid rgba(255,255,255,0.08); 
+    }
 
     .widget .input input {
-      flex: 1; padding: 12px;
+      flex: 1; 
+      padding: 12px;
       border: 0;
       background: rgba(255,255,255,0.05);
       color: #fff;
     }
 
     .widget .input button {
-      border: 0; padding: 0 16px;
+      border: 0; 
+      padding: 0 16px;
       cursor: pointer;
-      background: #0ea5e9; color: #fff;
+      background: #0ea5e9; 
+      color: #fff;
     }
 
-    .msg { margin: 8px 0; }
-    .msg.you { text-align: right; }
+    .msg { 
+      margin: 8px 0; 
+    }
+
+    .msg.you { 
+      text-align: right; 
+    }
 
     .msg .bubble {
       display: inline-block;
@@ -93,15 +117,26 @@
       max-width: 85%;
     }
 
-    .msg.you .bubble { background: #0f2036; color:#cfe2ff; }
-    .msg.ai .bubble { background: #1e242d; color:#e6e6e6; }
+    .msg.you .bubble { 
+      background: #0f2036; 
+      color:#cfe2ff; 
+    }
+
+    .msg.ai .bubble { 
+      background: #1e242d; 
+      color:#e6e6e6; 
+    }
   </style>
 </head>
+
 <body>
   <header class="wrap">
     <h1>Sergiu</h1>
-    <p>AI/ML Engineer • Software Developer • <a href="https://github.com/sergiu123456789">GitHub</a> • <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a></p>
-    <p>This page hosts my <strong>AI-powered guided tour agent</strong>. Recruiters arriving from GitHub or LinkedIn will start the tour automatically. Otherwise, use the chat button to explore my AI/ML portfolio.</p>
+    <p>AI/ML Engineer • Software Developer • 
+      <a href="https://github.com/sergiu123456789">GitHub</a> • 
+      <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a>
+    </p>
+    <p>This page hosts my <strong>AI-powered guided tour agent</strong>. Recruiters arriving from GitHub or LinkedIn auto-start the tour. Others can click the chat button.</p>
 
     <div>
       <span class="pill">Machine Learning Engineering</span>
@@ -115,13 +150,24 @@
   <main class="wrap">
     <h2>Highlighted Projects</h2>
     <ul>
-      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">RAG Q&A Chatbot</a> — Document-grounded chatbot using embeddings and retrieval pipelines for accurate answers.</li>
-      <li><a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen, LangGraph & CrewAI</a> — Multi-agent automation frameworks for structured reasoning and task orchestration.</li>
-      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">Character AI Chatbot</a> — Personality-driven conversational agent powered by the OpenAI API.</li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">
+          RAG Q&A Chatbot
+        </a> — Retrieval-augmented generation with embeddings.
+      </li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen, LangGraph & CrewAI</a> — Multi-agent orchestration frameworks.
+      </li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">
+          Character AI Chatbot
+        </a> — Personality-driven conversational agent.
+      </li>
     </ul>
   </main>
 
-  <div id="widget" class="widget" aria-live="polite" aria-label="Recruiter guided tour chat">
+  <!-- CHAT WIDGET -->
+  <div id="widget" class="widget">
     <header>Recruiter Tour Agent</header>
     <div id="msgs" class="messages"></div>
     <div class="input">
@@ -129,94 +175,23 @@
       <button id="send">Send</button>
     </div>
   </div>
+
   <button id="launch" class="chat-launch">💬 Chat</button>
 
-<!--    <script>
-  const BACKEND_URL = "https://agent-backend.mail4sergiu.workers.dev/";
-
-  const widget = document.getElementById('widget');
-  const launch = document.getElementById('launch');
-  const msgs = document.getElementById('msgs');
-  const inp = document.getElementById('inp');
-  const send = document.getElementById('send');
-
-  function showWidget(openIntro = true) {
-    widget.style.display = 'block';
-    if (openIntro && !widget.dataset.welcomed) {
-      widget.dataset.welcomed = "1";
-      addAI(`Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio.`);
-    }
-  }
-
-  function addMsg(cls, text) {
-    const d = document.createElement('div');
-    d.className = 'msg ' + cls;
-    d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
-    msgs.appendChild(d);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  const addYou = (t) => addMsg('you', t);
-  const addAI = (t) => addMsg('ai', t);
-
-  async function chat(userText) {
-    addYou(userText);
-
-    const system = { role: "system", content: "You are a recruiter-facing guide for Sergiu's AI/ML portfolio." };
-    const contextMsg = { role: "user", content: "Visitor context active." };
-    const userMsg = { role: "user", content: userText };
-
-    addAI("Thinking…");
-
-    const r = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [system, contextMsg, userMsg] })
-    });
-
-    msgs.lastChild.remove();
-
-    if (!r.ok) return addAI("Something went wrong. Please try again.");
-
-    const data = await r.json();
-    const text = data.choices?.[0]?.message?.content || "(no response)";
-    addAI(text);
-  }
-
-  send.onclick = () => {
-    if (inp.value.trim()) {
-      chat(inp.value.trim());
-      inp.value = '';
-    }
-  };
-
-  inp.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && inp.value.trim()) {
-      chat(inp.value.trim());
-      inp.value = '';
-    }
-  });
-
-  launch.onclick = () => showWidget();
-
-  (function autoOpen() {
-    const ref = (document.referrer || "").toLowerCase();
-    const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
-    if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
-      showWidget(true);
-      const who = ref.includes('github') || src === 'github' ? 'GitHub' : 'LinkedIn';
-      chat(`I am a recruiter coming from ${who}. Show me relevant AI/ML projects.`);
-    }
-  })();
-</script> -->
 <script>
-/* 1) BACKEND URL — your actual Cloud Run endpoint */
+/* ------------------------------
+   1. BACKEND URL (Cloud Run)
+--------------------------------*/
 const BACKEND_URL = "https://portfolio-tour-agent-1022606085700.europe-west1.run.app/chat";
 
-/* 2) SESSION HANDLING */
+/* ------------------------------
+   2. SESSION HANDLING
+--------------------------------*/
 let sessionId = localStorage.getItem("tourSessionId") || null;
 
-/* 3) Detect recruitment source */
+/* ------------------------------
+   3. DETECT SOURCE (github/linkedin/direct)
+--------------------------------*/
 function detectSource() {
   const urlParams = new URLSearchParams(window.location.search);
   const src = urlParams.get("src");
@@ -230,23 +205,29 @@ function detectSource() {
   return "direct";
 }
 
-/* UI elements */
+/* ------------------------------
+   4. UI ELEMENTS
+--------------------------------*/
 const widget = document.getElementById('widget');
 const launch = document.getElementById('launch');
 const msgs = document.getElementById('msgs');
 const inp = document.getElementById('inp');
 const send = document.getElementById('send');
 
-/* Show widget */
+/* ------------------------------
+   5. SHOW WIDGET
+--------------------------------*/
 function showWidget(openIntro = true) {
   widget.style.display = 'block';
   if (openIntro && !widget.dataset.opened) {
     widget.dataset.opened = "1";
-    addAI(`Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio.`);
+    addAI("Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio.");
   }
 }
 
-/* Message rendering */
+/* ------------------------------
+   6. MESSAGE RENDERING
+--------------------------------*/
 function addMsg(cls, text) {
   const d = document.createElement('div');
   d.className = 'msg ' + cls;
@@ -258,42 +239,54 @@ function addMsg(cls, text) {
 const addYou = (t) => addMsg('you', t);
 const addAI = (t) => addMsg('ai', t);
 
-/* 4) Backend call */
+/* ------------------------------
+   7. SEND MESSAGE TO BACKEND
+--------------------------------*/
 async function sendMessage(message) {
   const source = detectSource();
 
   const payload = {
-    session_id: sessionId,  // null for first call
+    session_id: sessionId,
     message,
     source
   };
 
-  // Temporary "thinking" bubble
-  const thinkingBubble = addAI("Thinking…");
+  // Add temporary thinking bubble
+  addAI("Thinking…");
 
-  const res = await fetch(BACKEND_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const res = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-  // Remove the last AI bubble (the thinking one)
-  msgs.removeChild(msgs.lastChild);
+    // Remove thinking bubble
+    msgs.removeChild(msgs.lastChild);
 
-  if (!res.ok) {
-    return addAI("Something went wrong. Please try again.");
+    if (!res.ok) {
+      console.error("Backend error:", res.status, await res.text());
+      return addAI("⚠️ Something went wrong. Please try again.");
+    }
+
+    const data = await res.json();
+
+    // Save session ID
+    sessionId = data.session_id;
+    localStorage.setItem("tourSessionId", sessionId);
+
+    addAI(data.reply);
+
+  } catch (err) {
+    console.error("Network failure:", err);
+    msgs.removeChild(msgs.lastChild);
+    addAI("⚠️ I couldn't reach the backend. Please try again.");
   }
-
-  const data = await res.json();
-
-  // Store session for future turns
-  sessionId = data.session_id;
-  localStorage.setItem("tourSessionId", sessionId);
-
-  addAI(data.reply);
 }
 
-/* 5) UI events */
+/* ------------------------------
+   8. SEND EVENTS
+--------------------------------*/
 send.onclick = () => {
   if (inp.value.trim()) {
     const msg = inp.value.trim();
@@ -312,27 +305,32 @@ inp.addEventListener("keydown", (e) => {
   }
 });
 
+/* ------------------------------
+   9. OPEN WIDGET
+--------------------------------*/
 launch.onclick = () => showWidget();
 
-/* 6) Auto-launch for GitHub / LinkedIn recruiter traffic */
+/* ------------------------------
+   10. AUTO-OPEN FOR RECRUITERS
+--------------------------------*/
 (function autoOpen() {
   const ref = (document.referrer || "").toLowerCase();
   const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
 
   const isRecruiter =
-    ref.includes('github.com') ||
-    ref.includes('linkedin.com') ||
-    ['github', 'linkedin'].includes(src);
+    ref.includes("github.com") ||
+    ref.includes("linkedin.com") ||
+    src === "github" ||
+    src === "linkedin";
 
   if (isRecruiter) {
     showWidget(true);
-    const who = ref.includes('github') || src === 'github' ? 'GitHub' : 'LinkedIn';
+    const who = ref.includes("github") || src === "github" ? "GitHub" : "LinkedIn";
     addAI("Hi! I'm your guided-tour agent.");
     sendMessage(`I am a recruiter coming from ${who}. Show me relevant AI/ML projects.`);
   }
 })();
 </script>
-
 
 </body>
 </html>
