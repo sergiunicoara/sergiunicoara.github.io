@@ -210,13 +210,13 @@
   })();
 </script> -->
 <script>
-/* 1) NEW BACKEND URL — replace with your actual Cloud Run URL */
-const BACKEND_URL = "https://portfolio-tour-agent-xyz-ew.a.run.app/chat";
+/* 1) BACKEND URL — your actual Cloud Run endpoint */
+const BACKEND_URL = "https://portfolio-tour-agent-1022606085700.europe-west1.run.app/chat";
 
 /* 2) SESSION HANDLING */
 let sessionId = localStorage.getItem("tourSessionId") || null;
 
-/* 3) SOURCE DETECTION (github / linkedin / direct) */
+/* 3) Detect recruitment source */
 function detectSource() {
   const urlParams = new URLSearchParams(window.location.search);
   const src = urlParams.get("src");
@@ -230,20 +230,23 @@ function detectSource() {
   return "direct";
 }
 
+/* UI elements */
 const widget = document.getElementById('widget');
 const launch = document.getElementById('launch');
 const msgs = document.getElementById('msgs');
 const inp = document.getElementById('inp');
 const send = document.getElementById('send');
 
+/* Show widget */
 function showWidget(openIntro = true) {
   widget.style.display = 'block';
-  if (openIntro && !widget.dataset.welcomed) {
-    widget.dataset.welcomed = "1";
+  if (openIntro && !widget.dataset.opened) {
+    widget.dataset.opened = "1";
     addAI(`Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio.`);
   }
 }
 
+/* Message rendering */
 function addMsg(cls, text) {
   const d = document.createElement('div');
   d.className = 'msg ' + cls;
@@ -255,17 +258,18 @@ function addMsg(cls, text) {
 const addYou = (t) => addMsg('you', t);
 const addAI = (t) => addMsg('ai', t);
 
-/* 4) UPDATED CLOUD RUN MESSAGE CALL */
+/* 4) Backend call */
 async function sendMessage(message) {
   const source = detectSource();
 
   const payload = {
-    session_id: sessionId,
+    session_id: sessionId,  // null for first call
     message,
-    source,
+    source
   };
 
-  addAI("Thinking…");
+  // Temporary "thinking" bubble
+  const thinkingBubble = addAI("Thinking…");
 
   const res = await fetch(BACKEND_URL, {
     method: "POST",
@@ -273,53 +277,62 @@ async function sendMessage(message) {
     body: JSON.stringify(payload),
   });
 
-  msgs.lastChild.remove();
+  // Remove the last AI bubble (the thinking one)
+  msgs.removeChild(msgs.lastChild);
 
-  if (!res.ok) return addAI("Something went wrong. Please try again.");
+  if (!res.ok) {
+    return addAI("Something went wrong. Please try again.");
+  }
 
   const data = await res.json();
 
-  // Update session
+  // Store session for future turns
   sessionId = data.session_id;
   localStorage.setItem("tourSessionId", sessionId);
 
   addAI(data.reply);
 }
 
-/* 5) Hook UI */
+/* 5) UI events */
 send.onclick = () => {
   if (inp.value.trim()) {
     const msg = inp.value.trim();
     addYou(msg);
     sendMessage(msg);
-    inp.value = '';
+    inp.value = "";
   }
 };
 
-inp.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && inp.value.trim()) {
+inp.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && inp.value.trim()) {
     const msg = inp.value.trim();
     addYou(msg);
     sendMessage(msg);
-    inp.value = '';
+    inp.value = "";
   }
 });
 
 launch.onclick = () => showWidget();
 
-/* 6) Auto-launch for GitHub/LinkedIn traffic */
+/* 6) Auto-launch for GitHub / LinkedIn recruiter traffic */
 (function autoOpen() {
   const ref = (document.referrer || "").toLowerCase();
   const src = (new URLSearchParams(location.search).get('src') || "").toLowerCase();
 
-  if (ref.includes('github.com') || ref.includes('linkedin.com') || ['github','linkedin'].includes(src)) {
+  const isRecruiter =
+    ref.includes('github.com') ||
+    ref.includes('linkedin.com') ||
+    ['github', 'linkedin'].includes(src);
+
+  if (isRecruiter) {
     showWidget(true);
     const who = ref.includes('github') || src === 'github' ? 'GitHub' : 'LinkedIn';
-    addYou(`Hi`);
+    addAI("Hi! I'm your guided-tour agent.");
     sendMessage(`I am a recruiter coming from ${who}. Show me relevant AI/ML projects.`);
   }
 })();
 </script>
+
 
 </body>
 </html>
