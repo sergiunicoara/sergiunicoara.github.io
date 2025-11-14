@@ -166,7 +166,7 @@
     <header>Recruiter Tour Agent</header>
     <div id="msgs" class="messages"></div>
     <div class="input">
-      <input id="inp" placeholder="Ask about projects, roles, impact…" />
+      <input id="inp" placeholder="Ask about roles, projects, impact…" />
       <button id="send">Send</button>
     </div>
   </div>
@@ -196,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (src === "github" || src === "linkedin") return src;
 
       const ref = document.referrer.toLowerCase();
-      if (ref.includes("github.com")) return "github";
+      if (ref.includes("github.com"))   return "github";
       if (ref.includes("linkedin.com")) return "linkedin";
 
       return "direct";
@@ -205,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function addMsg(cls, text) {
       const d = document.createElement("div");
       d.className = "msg " + cls;
-      d.innerHTML = `<div class="bubble">${text.replace(/\n/g,"<br/>")}</div>`;
+      d.innerHTML = `<div class="bubble">${text.replace(/\n/g, "<br/>")}</div>`;
       msgs.appendChild(d);
       msgs.scrollTop = msgs.scrollHeight;
     }
@@ -223,12 +223,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function sendMessage(message) {
       const source = detectSource();
+
       const payload = {
         session_id: sessionId,
         message,
         source
-        // NOTE: role & criteria are intentionally NOT sent.
-        // Backend infers conversation state to avoid loops.
+        // role & criteria intentionally omitted — backend controls flow
       };
 
       addAI("Thinking…");
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const res = await fetch(BACKEND_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
 
         if (msgs.lastChild && msgs.lastChild.innerText === "Thinking…") {
@@ -262,7 +262,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // click send
     send.onclick = () => {
       if (!inp.value.trim()) return;
       const msg = inp.value.trim();
@@ -271,7 +270,6 @@ document.addEventListener("DOMContentLoaded", function () {
       inp.value = "";
     };
 
-    // enter key
     inp.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && inp.value.trim()) {
         const msg = inp.value.trim();
@@ -281,10 +279,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // open widget
     launch.onclick = () => showWidget();
 
-    // auto-open for recruiters from GitHub/LinkedIn
+    // Auto-open for recruiters
     (function autoOpen() {
       const ref = document.referrer.toLowerCase();
       const src = new URLSearchParams(location.search).get("src")?.toLowerCase();
