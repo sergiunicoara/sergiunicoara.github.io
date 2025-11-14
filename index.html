@@ -61,7 +61,7 @@
       height: 520px;
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 16px;
-      background: rgba(24, 27, 33, 0.95);
+      background: rgba(24, 27, 33, 0.96);
       display: none;
       box-shadow: 0 10px 40px rgba(0,0,0,.6);
       backdrop-filter: blur(8px);
@@ -115,6 +115,12 @@
 
     .msg.you .bubble { background: #0f2036; color:#cfe2ff; }
     .msg.ai .bubble  { background: #1e242d; color:#e6e6e6; }
+
+    /* Typing indicator */
+    .typing {
+      opacity: 0.6;
+      font-style: italic;
+    }
   </style>
 </head>
 
@@ -131,13 +137,6 @@
       Recruiters arriving from GitHub or LinkedIn auto-start the tour. 
       Others can click the chat button.
     </p>
-
-    <div>
-      <span class="pill">Machine Learning Engineering</span>
-      <span class="pill">LLL Agents</span>
-      <span class="pill">NLP</span>
-      <span class="pill">MLOps</span>
-    </div>
   </header>
 
   <main class="wrap">
@@ -154,7 +153,7 @@
     <header>Recruiter Tour Agent</header>
     <div id="msgs" class="messages"></div>
     <div class="input">
-      <input id="inp" placeholder="Ask about projects…" />
+      <input id="inp" autocomplete="off" placeholder="Ask about projects…" />
       <button id="send">Send</button>
     </div>
   </div>
@@ -163,11 +162,10 @@
 
 <script>
 /* ----------------------------------------
-   BACKEND URL (Cloud Run)
+   CLOUD RUN BACKEND
 ---------------------------------------- */
 const BACKEND_URL = "https://portfolio-tour-agent-1022606085700.europe-west1.run.app/chat";
-
-let sessionId = localStorage.getItem("tourSessionId") || null;
+let sessionId = null;
 
 /* ----------------------------------------
    DETECT SOURCE
@@ -180,7 +178,7 @@ function detectSource() {
 }
 
 /* ----------------------------------------
-   UI ELEMENTS
+   UI HELPERS
 ---------------------------------------- */
 const widget = document.getElementById("widget");
 const launch = document.getElementById("launch");
@@ -188,35 +186,34 @@ const msgs = document.getElementById("msgs");
 const inp = document.getElementById("inp");
 const send = document.getElementById("send");
 
-/* ----------------------------------------
-   SHOW WIDGET
----------------------------------------- */
-function showWidget(openIntro = true) {
-  widget.style.display = "block";
-  if (openIntro && !widget.dataset.opened) {
-    widget.dataset.opened = "1";
-    addAI("Welcome. I’m the guided-tour agent for Sergiu's AI/ML portfolio.");
-  }
-}
-
-/* ----------------------------------------
-   MESSAGE RENDERING
----------------------------------------- */
 function addMsg(cls, text) {
   const d = document.createElement("div");
   d.className = "msg " + cls;
-  d.innerHTML = `<div class="bubble">${text.replace(/\n/g,"<br/>")}</div>`;
+  d.innerHTML = `<div class="bubble">${text.replace(/\n/g, "<br/>")}</div>`;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 const addYou = t => addMsg("you", t);
 const addAI = t => addMsg("ai", t);
 
+function addTyping() {
+  const d = document.createElement("div");
+  d.className = "msg ai typing";
+  d.id = "typing";
+  d.innerHTML = `<div class="bubble">Typing…</div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() {
+  const t = document.getElementById("typing");
+  if (t) t.remove();
+}
+
 /* ----------------------------------------
-   FIXED ROLE DETECTION
+   STRICT ROLE DETECTION
 ---------------------------------------- */
-function detectRoleFromMessage(message) {
-  const m = message.toLowerCase();
+function detectRole(msg) {
+  const text = msg.toLowerCase();
   const roles = [
     "ml engineer",
     "machine learning engineer",
@@ -227,41 +224,49 @@ function detectRoleFromMessage(message) {
     "mle"
   ];
   for (const r of roles) {
-    if (m.includes(r)) return r;
+    if (text === r) return r;
+    if (text.includes(` ${r}`)) return r;
+    if (text.startsWith(r)) return r;
   }
   return null;
 }
 
 /* ----------------------------------------
-   FIXED CRITERIA DETECTION
+   FLEXIBLE CRITERIA DETECTION
 ---------------------------------------- */
-function detectCriteriaFromMessage(message) {
-  if (message.includes(",")) {
-    const list = message.split(",").map(s => s.trim()).filter(Boolean);
-    if (list.length >= 2) return list;
+function detectCriteria(message) {
+  const t = message.trim().toLowerCase();
+
+  // List via commas
+  if (t.includes(",")) {
+    return t.split(",").map(x => x.trim()).filter(Boolean);
   }
+
+  // Single short criterion (e.g., "leadership")
+  if (t.split(" ").length <= 3) {
+    return [t];
+  }
+
   return null;
 }
 
 /* ----------------------------------------
-   SEND MESSAGE (role/criteria sent ONLY IF detected)
+   SEND MESSAGE
 ---------------------------------------- */
 async function sendMessage(message) {
   const source = detectSource();
-
-  const role = detectRoleFromMessage(message);
-  const criteria = detectCriteriaFromMessage(message);
+  const role = detectRole(message);
+  const criteria = detectCriteria(message);
 
   const payload = {
     session_id: sessionId,
     message,
     source
   };
-
   if (role) payload.role = role;
   if (criteria) payload.criteria = criteria;
 
-  addAI("Thinking…");
+  addTyping();
 
   try {
     const res = await fetch(BACKEND_URL, {
@@ -270,21 +275,20 @@ async function sendMessage(message) {
       body: JSON.stringify(payload)
     });
 
-    msgs.removeChild(msgs.lastChild);
+    removeTyping();
 
     const data = await res.json();
     sessionId = data.session_id;
-    localStorage.setItem("tourSessionId", sessionId);
     addAI(data.reply);
 
   } catch (err) {
-    msgs.removeChild(msgs.lastChild);
-    addAI("⚠️ I couldn't reach the backend.");
+    removeTyping();
+    addAI("⚠️ I couldn’t reach the backend.");
   }
 }
 
 /* ----------------------------------------
-   EVENT HANDLERS
+   EVENTS
 ---------------------------------------- */
 send.onclick = () => {
   if (inp.value.trim()) {
@@ -305,7 +309,10 @@ inp.addEventListener("keydown", e => {
 /* ----------------------------------------
    OPEN WIDGET
 ---------------------------------------- */
-launch.onclick = () => showWidget();
+launch.onclick = () => {
+  widget.style.display = "block";
+  addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
+};
 
 /* ----------------------------------------
    AUTO-OPEN FOR RECRUITERS
@@ -313,9 +320,9 @@ launch.onclick = () => showWidget();
 (function autoOpen() {
   const ref = document.referrer.toLowerCase();
   if (ref.includes("github") || ref.includes("linkedin")) {
-    showWidget(true);
+    widget.style.display = "block";
     addAI("Hi! I'm your guided-tour agent.");
-    sendMessage("I am a recruiter from your profile. Show me relevant projects.");
+    sendMessage("I am a recruiter incoming from your profile.");
   }
 })();
 </script>
