@@ -1,194 +1,182 @@
 <script>
-/* ------------------------------
-   BACKEND URL
---------------------------------*/
-const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
+document.addEventListener("DOMContentLoaded", function() {
 
-/* ------------------------------
-   SESSION ID
---------------------------------*/
-let sessionId = localStorage.getItem("tourSessionId") || null;
+  /* ------------------------------
+      BACKEND URL
+    --------------------------------*/
+  const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
 
-/* ------------------------------
-   DETECT VISITOR SOURCE
---------------------------------*/
-function detectSource() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const src = urlParams.get("src");
+  /* ------------------------------
+      SESSION ID
+    --------------------------------*/
+  let sessionId = localStorage.getItem("tourSessionId") || null;
 
-  if (src === "github" || src === "linkedin") return src;
+  /* ------------------------------
+      DETECT VISITOR SOURCE
+    --------------------------------*/
+  function detectSource() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const src = urlParams.get("src");
 
-  const ref = document.referrer.toLowerCase();
-  if (ref.includes("github.com")) return "github";
-  if (ref.includes("linkedin.com")) return "linkedin";
+    if (src === "github" || src === "linkedin") return src;
 
-  return "direct";
-}
+    const ref = document.referrer.toLowerCase();
+    if (ref.includes("github.com")) return "github";
+    if (ref.includes("linkedin.com")) return "linkedin";
 
-/* ------------------------------
-   UI ELEMENTS
---------------------------------*/
-const widget = document.getElementById('widget');
-const launch = document.getElementById('launch');
-const msgs = document.getElementById('msgs');
-const inp = document.getElementById('inp');
-const send = document.getElementById('send');
-
-/* ------------------------------
-   UI HANDLERS
---------------------------------*/
-function showWidget(openIntro = true) {
-  widget.style.display = 'block';
-  if (openIntro && !widget.dataset.opened) {
-    widget.dataset.opened = "1";
-    addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
+    return "direct";
   }
-}
 
-function addMsg(cls, text) {
-  const d = document.createElement('div');
-  d.className = 'msg ' + cls;
-  d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
-  msgs.appendChild(d);
-  msgs.scrollTop = msgs.scrollHeight;
-}
+  /* ------------------------------
+      UI ELEMENTS
+    --------------------------------*/
+  const widget = document.getElementById('widget');
+  const launch = document.getElementById('launch');
+  const msgs = document.getElementById('msgs');
+  const inp = document.getElementById('inp');
+  const send = document.getElementById('send');
 
-const addYou = (t) => addMsg('you', t);
-const addAI = (t) => addMsg('ai', t);
-
-/* ------------------------------
-   SMART ROLE + CRITERIA DETECTORS
---------------------------------*/
-function detectRoleFromMessage(msg) {
-  msg = msg.toLowerCase();
-  const keywords = ["engineer", "scientist", "developer", "ml", "ai", "llm"];
-
-  if (msg.split(/\s+/).length <= 8) {
-    for (const kw of keywords) {
-      if (msg.includes(kw)) {
-        return msg.trim();
-      }
+  /* ------------------------------
+      UI HANDLERS
+    --------------------------------*/
+  function showWidget(openIntro = true) {
+    widget.style.display = 'block';
+    if (openIntro && !widget.dataset.opened) {
+      widget.dataset.opened = "1";
+      addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
     }
   }
-  return null;
-}
 
-function detectCriteriaFromMessage(msg) {
-  msg = msg.toLowerCase();
-
-  if (msg.includes(",")) {
-    return msg.split(",").map(x => x.trim()).filter(Boolean);
+  function addMsg(cls, text) {
+    const d = document.createElement('div');
+    d.className = 'msg ' + cls;
+    d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
   }
 
-  const critWords = ["rag", "pipeline", "mlops", "ops", "deployment", "production", "scaling"];
-  for (const w of critWords) {
-    if (msg.includes(w)) return [msg.trim()];
+  const addYou = (t) => addMsg('you', t);
+  const addAI = (t) => addMsg('ai', t);
+
+  /* ------------------------------
+      SMART ROLE + CRITERIA DETECTORS
+    --------------------------------*/
+  function detectRoleFromMessage(msg) {
+    msg = msg.toLowerCase();
+    const keywords = ["engineer", "scientist", "developer", "ml", "ai", "llm"];
+    if (msg.split(/\s+/).length <= 8) {
+      for (const kw of keywords) if (msg.includes(kw)) return msg.trim();
+    }
+    return null;
   }
 
-  return null;
-}
-
-/* ------------------------------
-   SEND MESSAGE TO BACKEND
---------------------------------*/
-async function sendMessage(message) {
-  const source = detectSource();
-
-  let role = null;
-  let criteria = null;
-
-  // Detect last AI message
-  const lastAI = msgs.querySelector('.msg.ai:last-child');
-  const lastText = lastAI ? lastAI.innerText.toLowerCase() : "";
-
-  // Only detect role if backend is asking for it
-  if (lastText.includes("what role are you hiring for")) {
-    role = detectRoleFromMessage(message);
+  function detectCriteriaFromMessage(msg) {
+    msg = msg.toLowerCase();
+    if (msg.includes(",")) {
+      return msg.split(",").map(x => x.trim()).filter(Boolean);
+    }
+    const critWords = ["rag", "pipeline", "mlops", "ops", "deployment", "production", "scaling"];
+    for (const w of critWords) if (msg.includes(w)) return [msg.trim()];
+    return null;
   }
 
-  // Only detect criteria if backend is asking for them
-  if (lastText.includes("top 2–3 evaluation criteria")) {
-    criteria = detectCriteriaFromMessage(message);
+  /* ------------------------------
+      SEND MESSAGE TO BACKEND
+    --------------------------------*/
+  async function sendMessage(message) {
+    const source = detectSource();
+
+    let role = null;
+    let criteria = null;
+
+    const lastAI = msgs.querySelector('.msg.ai:last-child');
+    const lastText = lastAI ? lastAI.innerText.toLowerCase() : "";
+
+    if (lastText.includes("what role are you hiring for")) {
+      role = detectRoleFromMessage(message);
+    }
+    if (lastText.includes("top 2–3 evaluation criteria")) {
+      criteria = detectCriteriaFromMessage(message);
+    }
+
+    const payload = {
+      session_id: sessionId,
+      message,
+      source,
+      role,
+      criteria
+    };
+
+    addAI("Thinking…");
+
+    try {
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      msgs.removeChild(msgs.lastChild);
+
+      if (!res.ok) return addAI("⚠️ Something went wrong. Please try again.");
+
+      const data = await res.json();
+      sessionId = data.session_id;
+      localStorage.setItem("tourSessionId", sessionId);
+
+      addAI(data.reply);
+
+    } catch (err) {
+      msgs.removeChild(msgs.lastChild);
+      addAI("⚠️ I couldn't reach the backend. Please try again.");
+    }
   }
 
-  const payload = {
-    session_id: sessionId,
-    message,
-    source,
-    role,
-    criteria
+  /* ------------------------------
+      SEND ACTIONS
+    --------------------------------*/
+  send.onclick = () => {
+    if (inp.value.trim()) {
+      const msg = inp.value.trim();
+      addYou(msg);
+      sendMessage(msg);
+      inp.value = "";
+    }
   };
 
-  addAI("Thinking…");
-
-  try {
-    const res = await fetch(BACKEND_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    msgs.removeChild(msgs.lastChild); // remove thinking
-
-    if (!res.ok) {
-      return addAI("⚠️ Something went wrong. Please try again.");
+  inp.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && inp.value.trim()) {
+      const msg = inp.value.trim();
+      addYou(msg);
+      sendMessage(msg);
+      inp.value = "";
     }
+  });
 
-    const data = await res.json();
-    sessionId = data.session_id;
-    localStorage.setItem("tourSessionId", sessionId);
+  /* ------------------------------
+      LAUNCH WIDGET
+    --------------------------------*/
+  launch.onclick = () => showWidget();
 
-    addAI(data.reply);
+  /* ------------------------------
+      AUTO-OPEN (GitHub / LinkedIn)
+    --------------------------------*/
+  (function autoOpen() {
+    const ref = document.referrer.toLowerCase();
+    const src = new URLSearchParams(location.search).get('src')?.toLowerCase();
 
-  } catch (err) {
-    msgs.removeChild(msgs.lastChild);
-    addAI("⚠️ I couldn't reach the backend. Please try again.");
-  }
-}
+    const isRecruiter =
+      ref.includes("github.com") ||
+      ref.includes("linkedin.com") ||
+      src === "github" ||
+      src === "linkedin";
 
-/* ------------------------------
-   SEND ACTIONS
---------------------------------*/
-send.onclick = () => {
-  if (inp.value.trim()) {
-    const msg = inp.value.trim();
-    addYou(msg);
-    sendMessage(msg);
-    inp.value = "";
-  }
-};
+    if (isRecruiter) {
+      showWidget(true);
+      addAI("Hi! I'm your guided-tour agent.");
+      sendMessage("I am a recruiter visiting from GitHub/LinkedIn. Show me relevant AI/ML projects.");
+    }
+  })();
 
-inp.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && inp.value.trim()) {
-    const msg = inp.value.trim();
-    addYou(msg);
-    sendMessage(msg);
-    inp.value = "";
-  }
 });
-
-/* ------------------------------
-   LAUNCH WIDGET
---------------------------------*/
-launch.onclick = () => showWidget();
-
-/* ------------------------------
-   AUTO-OPEN FOR RECRUITERS
---------------------------------*/
-(function autoOpen() {
-  const ref = document.referrer.toLowerCase();
-  const src = new URLSearchParams(location.search).get('src')?.toLowerCase();
-
-  const isRecruiter =
-    ref.includes("github.com") ||
-    ref.includes("linkedin.com") ||
-    src === "github" ||
-    src === "linkedin";
-
-  if (isRecruiter) {
-    showWidget(true);
-    addAI("Hi! I'm your guided-tour agent.");
-    sendMessage("I am a recruiter visiting from GitHub/LinkedIn. Show me relevant AI/ML projects.");
-  }
-})();
 </script>
