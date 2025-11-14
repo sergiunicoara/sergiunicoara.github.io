@@ -40,24 +40,24 @@
 
     /* Chat widget */
     .chat-launch {
-      position: fixed; 
-      right: 20px; 
+      position: fixed;
+      right: 20px;
       bottom: 20px;
-      border: 0; 
+      border: 0;
       padding: 12px 16px;
       border-radius: 999px;
       box-shadow: 0 4px 20px rgba(0,0,0,.6);
       cursor: pointer;
-      background: #0ea5e9; 
-      color: #fff; 
+      background: #0ea5e9;
+      color: #fff;
       font-weight: 600;
     }
 
     .widget {
-      position: fixed; 
-      right: 20px; 
+      position: fixed;
+      right: 20px;
       bottom: 80px;
-      width: 360px; 
+      width: 360px;
       height: 520px;
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 16px;
@@ -75,19 +75,19 @@
       color: #fff;
     }
 
-    .widget .messages { 
-      height: 400px; 
-      overflow-y: auto; 
-      padding: 12px 16px; 
+    .widget .messages {
+      height: 400px;
+      overflow-y: auto;
+      padding: 12px 16px;
     }
 
-    .widget .input { 
-      display: flex; 
-      border-top: 1px solid rgba(255,255,255,0.08); 
+    .widget .input {
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.08);
     }
 
     .widget .input input {
-      flex: 1; 
+      flex: 1;
       padding: 12px;
       border: 0;
       background: rgba(255,255,255,0.05);
@@ -95,15 +95,14 @@
     }
 
     .widget .input button {
-      border: 0; 
+      border: 0;
       padding: 0 16px;
       cursor: pointer;
-      background: #0ea5e9; 
+      background: #0ea5e9;
       color: #fff;
     }
 
     .msg { margin: 8px 0; }
-
     .msg.you { text-align: right; }
 
     .msg .bubble {
@@ -114,7 +113,7 @@
     }
 
     .msg.you .bubble { background: #0f2036; color:#cfe2ff; }
-    .msg.ai .bubble { background: #1e242d; color:#e6e6e6; }
+    .msg.ai  .bubble { background: #1e242d; color:#e6e6e6; }
   </style>
 </head>
 
@@ -122,13 +121,13 @@
   <header class="wrap">
     <h1>Sergiu</h1>
     <p>
-      AI/ML Engineer • Software Developer • 
-      <a href="https://github.com/sergiu123456789">GitHub</a> • 
+      AI/ML Engineer • Software Developer •
+      <a href="https://github.com/sergiu123456789">GitHub</a> •
       <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a>
     </p>
     <p>
-      This page hosts my <strong>AI-powered guided tour agent</strong>. 
-      Recruiters arriving from GitHub or LinkedIn auto-start the tour. 
+      This page hosts my <strong>AI-powered guided tour agent</strong>.
+      Recruiters arriving from GitHub or LinkedIn auto-start the tour.
       Others can click the chat button.
     </p>
 
@@ -144,9 +143,21 @@
   <main class="wrap">
     <h2>Highlighted Projects</h2>
     <ul>
-      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">RAG Q&A Chatbot</a></li>
-      <li><a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen / LangGraph Multi-Agent Systems</a></li>
-      <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">Character AI Chatbot</a></li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">
+          RAG Q&A Chatbot
+        </a> — Retrieval-augmented generation with embeddings.
+      </li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Agentic-AI">
+          AutoGen, LangGraph & CrewAI
+        </a> — Multi-agent orchestration frameworks.
+      </li>
+      <li>
+        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">
+          Character AI Chatbot
+        </a> — Personality-driven conversational agent.
+      </li>
     </ul>
   </main>
 
@@ -163,99 +174,105 @@
   <button id="launch" class="chat-launch">💬 Chat</button>
 
 <script>
-/* ------------------------------------------------------------------
-   FULL PRODUCTION CHAT WIDGET — WITH FIXED ROLE/CRITERIA DETECTION
-   + SUPPORT FOR ANY NON-LISTED ROLE
--------------------------------------------------------------------*/
-document.addEventListener("DOMContentLoaded", function () {
+/* ============================================================
+   SAFE INITIALIZER – waits for DOM + ensures elements exist
+============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
 
-  function waitForElements() {
-    const widget = document.getElementById('widget');
-    const launch = document.getElementById('launch');
-    const msgs   = document.getElementById('msgs');
-    const inp    = document.getElementById('inp');
-    const send   = document.getElementById('send');
+  function startWhenReady() {
+    const widget = document.getElementById("widget");
+    const launch = document.getElementById("launch");
+    const msgs   = document.getElementById("msgs");
+    const inp    = document.getElementById("inp");
+    const send   = document.getElementById("send");
 
     if (!widget || !launch || !msgs || !inp || !send) {
-      return setTimeout(waitForElements, 50);
+      return setTimeout(startWhenReady, 40);
     }
 
-    /* ------------------------------ */
+    /* ------------------ VARS ------------------ */
     const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
     let sessionId = localStorage.getItem("tourSessionId") || null;
 
+    /* ------------------ UTILS ------------------ */
     function detectSource() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const src = urlParams.get("src");
+      const params = new URLSearchParams(window.location.search);
+      const src = params.get("src");
       if (src === "github" || src === "linkedin") return src;
 
       const ref = document.referrer.toLowerCase();
       if (ref.includes("github.com")) return "github";
       if (ref.includes("linkedin.com")) return "linkedin";
+
       return "direct";
     }
 
-    /* ------------------------------ */
-    function showWidget(openIntro = true) {
-      widget.style.display = 'block';
-      if (openIntro && !widget.dataset.opened) {
+    function showWidget(intro = true) {
+      widget.style.display = "block";
+      if (intro && !widget.dataset.opened) {
         widget.dataset.opened = "1";
         addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
       }
     }
 
     function addMsg(cls, text) {
-      const d = document.createElement('div');
-      d.className = 'msg ' + cls;
-      d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
+      const d = document.createElement("div");
+      d.className = "msg " + cls;
+      d.innerHTML = `<div class="bubble">${text.replace(/\n/g,"<br/>")}</div>`;
       msgs.appendChild(d);
       msgs.scrollTop = msgs.scrollHeight;
     }
 
-    const addYou = (t) => addMsg('you', t);
-    const addAI  = (t) => addMsg('ai',  t);
+    const addAI  = (t) => addMsg("ai", t);
+    const addYou = (t) => addMsg("you", t);
 
-    /* ------------------------------ */
-    // ROLE DETECTOR — works for ANY role (even "fisherman")
-    function detectRoleFromMessage(msg) {
-      msg = msg.trim();
-      if (msg.length > 0 && msg.length <= 50) {
-        return msg; // accept ANY role
-      }
+    /* ------------------ DETECTORS ------------------ */
+    function detectRole(msg) {
+      msg = msg.toLowerCase();
+      if (msg.split(/\s+/).length > 8) return null;
+      const kws = ["engineer","scientist","developer","llm","ml","ai","analyst"];
+      if (kws.some(k => msg.includes(k))) return msg.trim();
       return null;
     }
 
-    function detectCriteriaFromMessage(msg) {
+    function detectCriteria(msg) {
       msg = msg.toLowerCase();
       if (msg.includes(",")) {
-        return msg.split(",").map(x => x.trim()).filter(Boolean);
+        return msg.split(",").map(x=>x.trim()).filter(Boolean);
       }
-
-      const crit = ["rag", "pipeline", "mlops", "ops", "deployment", "production", "scaling"];
-      for (const w of crit) if (msg.includes(w)) return [msg.trim()];
-      return [msg.trim()]; // fallback: treat entire message as criterion
+      const kws = ["mlops","rag","pipeline","production","deploy","ops","scaling"];
+      if (kws.some(k => msg.includes(k))) return [msg.trim()];
+      return null;
     }
 
-    /* ------------------------------ */
+    /* ------------------ SEND MESSAGE ------------------ */
     async function sendMessage(message) {
       const source = detectSource();
-      let role = null;
-      let criteria = null;
+      let role = undefined;
+      let criteria = undefined;
 
-      const lastAI = msgs.querySelector('.msg.ai:last-child');
+      const lastAI = msgs.querySelector(".msg.ai:last-child");
       const lastText = lastAI ? lastAI.innerText.toLowerCase() : "";
 
-      // BACKEND IS ASKING FOR ROLE
-      if (lastText.includes("what role are you hiring for")) {
-        role = detectRoleFromMessage(message);
+      // role detection only when expected
+      if (lastText.includes("what role")) {
+        const found = detectRole(message);
+        if (found) role = found;
       }
 
-      // BACKEND IS ASKING FOR CRITERIA
+      // criteria detection only when expected
       if (lastText.includes("criteria")) {
-        criteria = detectCriteriaFromMessage(message);
+        const found = detectCriteria(message);
+        if (found) criteria = found;
       }
 
-      const payload = { session_id: sessionId, message, source, role, criteria };
+      const payload = {
+        session_id: sessionId,
+        message,
+        source,
+        ...(role !== undefined && { role }),
+        ...(criteria !== undefined && { criteria })
+      };
 
       addAI("Thinking…");
 
@@ -275,26 +292,24 @@ document.addEventListener("DOMContentLoaded", function () {
         const data = await res.json();
         sessionId = data.session_id;
         localStorage.setItem("tourSessionId", sessionId);
-
         addAI(data.reply);
 
       } catch (err) {
-        msgs.removeChild(msgs.lastChild);
+        try { msgs.removeChild(msgs.lastChild); } catch {}
         addAI("⚠️ Backend unreachable.");
       }
     }
 
-    /* ------------------------------ */
+    /* ------------------ BIND EVENTS ------------------ */
     send.onclick = () => {
-      if (inp.value.trim()) {
-        const msg = inp.value.trim();
-        addYou(msg);
-        sendMessage(msg);
-        inp.value = "";
-      }
+      if (!inp.value.trim()) return;
+      const msg = inp.value.trim();
+      addYou(msg);
+      sendMessage(msg);
+      inp.value = "";
     };
 
-    inp.addEventListener("keydown", (e) => {
+    inp.addEventListener("keydown", e => {
       if (e.key === "Enter" && inp.value.trim()) {
         const msg = inp.value.trim();
         addYou(msg);
@@ -305,25 +320,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     launch.onclick = () => showWidget();
 
-    /* AUTO-OPEN FOR RECRUITERS */
+    /* ------------------ AUTO OPEN ------------------ */
     (function autoOpen() {
       const ref = document.referrer.toLowerCase();
-      const src = new URLSearchParams(location.search).get('src')?.toLowerCase();
-      const isRecruiter =
+      const src = new URLSearchParams(location.search).get("src")?.toLowerCase();
+
+      const recruiter =
         ref.includes("github.com") ||
         ref.includes("linkedin.com") ||
         src === "github" ||
         src === "linkedin";
 
-      if (isRecruiter) {
+      if (recruiter) {
         showWidget(true);
         addAI("Hi! I'm your guided-tour agent.");
-        sendMessage("I am a recruiter from GitHub or LinkedIn. Show me relevant AI/ML projects.");
+        sendMessage("I am a recruiter from GitHub/LinkedIn. Show me relevant AI/ML projects.");
       }
     })();
   }
 
-  waitForElements();
+  startWhenReady();
 });
 </script>
 
