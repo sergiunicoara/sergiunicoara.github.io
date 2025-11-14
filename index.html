@@ -88,9 +88,21 @@
 <main class="wrap">
   <h2>Highlighted Projects</h2>
   <ul>
-    <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">RAG Q&A Chatbot</a></li>
-    <li><a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen, LangGraph & CrewAI</a></li>
-    <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">Character AI Chatbot</a></li>
+    <li>
+      <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">
+        RAG Q&A Chatbot
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/sergiu123456789/Agentic-AI">
+        AutoGen, LangGraph & CrewAI
+      </a>
+    </li>
+    <li>
+      <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">
+        Character AI Chatbot
+      </a>
+    </li>
   </ul>
 </main>
 
@@ -99,7 +111,7 @@
   <header>Recruiter Tour Agent</header>
   <div id="msgs" class="messages"></div>
   <div class="input">
-    <input id="inp" placeholder="Ask about projects, outcomes, impact…" />
+    <input id="inp" placeholder="Ask about projects, outcomes, deployment, impact…" />
     <button id="send">Send</button>
   </div>
 </div>
@@ -120,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return setTimeout(waitForElements, 30);
     }
 
-    /* =============================== */
     const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
     let sessionId = localStorage.getItem("tourSessionId") || null;
 
@@ -146,16 +157,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const detectRole = (msg) => {
       const m = msg.toLowerCase();
       const kw = ["engineer","scientist","developer","ai","ml","llm"];
-      if (m.split(/\s+/).length <= 8)
-        if (kw.some(k => m.includes(k))) return msg.trim();
+      if (m.split(/\s+/).length <= 8 && kw.some(k => m.includes(k))) {
+        return msg.trim();
+      }
       return null;
     };
 
     const detectCriteria = (msg) => {
       const m = msg.toLowerCase();
       if (m.includes(",")) return m.split(",").map(x=>x.trim()).filter(Boolean);
-      const kw = ["rag","pipeline","mlops","deployment","production","scaling"];
+      const kw = ["rag","pipeline","mlops","deployment","production","scaling","leadership"];
       if (kw.some(k => m.includes(k))) return [msg.trim()];
+      if (m.split(/\s+/).length <= 3) return [msg.trim()]; // short single criterion
       return null;
     };
 
@@ -166,8 +179,12 @@ document.addEventListener("DOMContentLoaded", () => {
       let role = null;
       let criteria = null;
 
-      if (lastText.includes("what role"))       role = detectRole(message);
-      if (lastText.includes("criteria"))        criteria = detectCriteria(message);
+      if (lastText.includes("what role")) {
+        role = detectRole(message);
+      }
+      if (lastText.includes("criteria")) {
+        criteria = detectCriteria(message);
+      }
 
       const payload = {
         session_id: sessionId,
@@ -186,38 +203,65 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(payload)
         });
 
-        msgs.removeChild(msgs.lastChild);
+        if (msgs.lastChild && msgs.lastChild.innerText === "Thinking…") {
+          msgs.removeChild(msgs.lastChild);
+        }
 
-        if (!res.ok) return addAI("⚠️ Something went wrong.");
+        if (!res.ok) {
+          return addAI("⚠️ Something went wrong. Please try again.");
+        }
 
         const data = await res.json();
         sessionId = data.session_id;
         localStorage.setItem("tourSessionId", sessionId);
         addAI(data.reply);
 
-      } catch {
-        msgs.removeChild(msgs.lastChild);
-        addAI("⚠️ Backend unreachable.");
+      } catch (err) {
+        if (msgs.lastChild && msgs.lastChild.innerText === "Thinking…") {
+          msgs.removeChild(msgs.lastChild);
+        }
+        addAI("⚠️ Could not reach backend.");
       }
     }
 
-    launch.onclick = () => { widget.style.display="block"; addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio."); };
-    send.onclick = () => { if (inp.value.trim()) { addYou(inp.value); sendMessage(inp.value); inp.value=""; }};
-    inp.onkeydown = (e) => { if (e.key==="Enter" && inp.value.trim()) { addYou(inp.value); sendMessage(inp.value); inp.value=""; }};
+    launch.onclick = () => {
+      widget.style.display = "block";
+      addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
+    };
+
+    send.onclick = () => {
+      if (inp.value.trim()) {
+        const msg = inp.value.trim();
+        addYou(msg);
+        sendMessage(msg);
+        inp.value = "";
+      }
+    };
+
+    inp.onkeydown = (e) => {
+      if (e.key === "Enter" && inp.value.trim()) {
+        const msg = inp.value.trim();
+        addYou(msg);
+        sendMessage(msg);
+        inp.value = "";
+      }
+    };
 
     (function autoOpen(){
       const r = document.referrer.toLowerCase();
       const s = new URLSearchParams(location.search).get("src")?.toLowerCase();
-      const isRecruiter = r.includes("github.com") || r.includes("linkedin.com") || s==="github" || s==="linkedin";
+      const isRecruiter =
+        r.includes("github.com") ||
+        r.includes("linkedin.com") ||
+        s === "github" || s === "linkedin";
 
       if (isRecruiter) {
-        widget.style.display="block";
+        widget.style.display = "block";
         addAI("Hi! I'm your guided-tour agent.");
         sendMessage("I am a recruiter visiting. Show me relevant AI/ML projects.");
       }
     })();
-
-  } // end waitForElements()
+  }
 
   waitForElements();
 });
