@@ -132,11 +132,16 @@
 <body>
   <header class="wrap">
     <h1>Sergiu</h1>
-    <p>AI/ML Engineer • Software Developer • 
+    <p>
+      AI/ML Engineer • Software Developer • 
       <a href="https://github.com/sergiu123456789">GitHub</a> • 
       <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a>
     </p>
-    <p>This page hosts my <strong>AI-powered guided tour agent</strong>. Recruiters arriving from GitHub or LinkedIn auto-start the tour. Others can click the chat button.</p>
+    <p>
+      This page hosts my <strong>AI-powered guided tour agent</strong>. 
+      Recruiters arriving from GitHub or LinkedIn auto-start the tour. 
+      Others can click the chat button.
+    </p>
 
     <div>
       <span class="pill">Machine Learning Engineering</span>
@@ -156,7 +161,9 @@
         </a> — Retrieval-augmented generation with embeddings.
       </li>
       <li>
-        <a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen, LangGraph & CrewAI</a> — Multi-agent orchestration frameworks.
+        <a href="https://github.com/sergiu123456789/Agentic-AI">
+          AutoGen, LangGraph & CrewAI
+        </a> — Multi-agent orchestration frameworks.
       </li>
       <li>
         <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">
@@ -240,15 +247,51 @@ const addYou = (t) => addMsg('you', t);
 const addAI = (t) => addMsg('ai', t);
 
 /* ------------------------------
-   7. SEND MESSAGE TO BACKEND
+   7. HEURISTICS: ROLE & CRITERIA DETECTION
+--------------------------------*/
+function detectRoleFromMessage(message) {
+  const m = message.toLowerCase();
+  const roleKeywords = ["engineer", "scientist", "developer", "ml", "ai", "llm", "mle"];
+
+  if (m.split(/\s+/).length <= 8) {
+    for (const kw of roleKeywords) {
+      if (m.includes(kw)) return message.trim();
+    }
+  }
+  return null;
+}
+
+function detectCriteriaFromMessage(message) {
+  const m = message.toLowerCase();
+  if (m.includes(",")) {
+    return message.split(",").map(x => x.trim()).filter(x => x.length > 0);
+  }
+  const critKeywords = ["rag", "pipeline", "pipelines", "ops", "mlops", "deployment", "scale", "scaling", "production"];
+  for (const kw of critKeywords) {
+    if (m.includes(kw)) return [message.trim()];
+  }
+  return null;
+}
+
+/* ------------------------------
+   8. SEND MESSAGE TO BACKEND (with smart role/criteria)
 --------------------------------*/
 async function sendMessage(message) {
   const source = detectSource();
 
+  let role = null;
+  let criteria = null;
+
+  // Try to infer role / criteria from current user message
+  role = detectRoleFromMessage(message);
+  criteria = detectCriteriaFromMessage(message);
+
   const payload = {
     session_id: sessionId,
     message,
-    source
+    source,
+    role,
+    criteria
   };
 
   // Add temporary thinking bubble
@@ -279,13 +322,16 @@ async function sendMessage(message) {
 
   } catch (err) {
     console.error("Network failure:", err);
-    msgs.removeChild(msgs.lastChild);
+    // Remove thinking bubble safely (if still present)
+    if (msgs.lastChild && msgs.lastChild.textContent.includes("Thinking…")) {
+      msgs.removeChild(msgs.lastChild);
+    }
     addAI("⚠️ I couldn't reach the backend. Please try again.");
   }
 }
 
 /* ------------------------------
-   8. SEND EVENTS
+   9. SEND EVENTS
 --------------------------------*/
 send.onclick = () => {
   if (inp.value.trim()) {
@@ -306,12 +352,12 @@ inp.addEventListener("keydown", (e) => {
 });
 
 /* ------------------------------
-   9. OPEN WIDGET
+   10. OPEN WIDGET
 --------------------------------*/
 launch.onclick = () => showWidget();
 
 /* ------------------------------
-   10. AUTO-OPEN FOR RECRUITERS
+   11. AUTO-OPEN FOR RECRUITERS
 --------------------------------*/
 (function autoOpen() {
   const ref = (document.referrer || "").toLowerCase();
