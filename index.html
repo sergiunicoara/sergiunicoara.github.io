@@ -12,173 +12,102 @@
       background: radial-gradient(circle at 20% 20%, #0d1117 0%, #0b0f14 45%, #06080a 100%);
       color: #e6e6e6;
     }
-
     header {
       padding: 32px 24px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.02);
       backdrop-filter: blur(6px);
     }
-
     a { color: #7cb7ff; text-decoration: none; }
-
     .wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
-
     .pill {
-      display:inline-block;
-      padding:6px 12px;
-      border:1px solid rgba(255,255,255,0.18);
-      border-radius:999px;
-      margin-right:6px;
-      font-size:12px;
-      background: rgba(255,255,255,0.05);
+      display:inline-block; padding:6px 12px; border:1px solid rgba(255,255,255,0.18);
+      border-radius:999px; margin-right:6px; font-size:12px; background: rgba(255,255,255,0.05);
     }
-
     h1, h2 { color: #fff; }
-
     ul li { margin-bottom: 12px; line-height: 1.5; }
 
     /* Chat widget */
     .chat-launch {
-      position: fixed; 
-      right: 20px; 
-      bottom: 20px;
-      border: 0; 
-      padding: 12px 16px;
-      border-radius: 999px;
+      position: fixed; right: 20px; bottom: 20px;
+      border: 0; padding: 12px 16px; border-radius: 999px;
       box-shadow: 0 4px 20px rgba(0,0,0,.6);
-      cursor: pointer;
-      background: #0ea5e9; 
-      color: #fff; 
-      font-weight: 600;
+      cursor: pointer; background: #0ea5e9; color: #fff; font-weight: 600;
     }
-
     .widget {
-      position: fixed; 
-      right: 20px; 
-      bottom: 80px;
-      width: 360px; 
-      height: 520px;
+      position: fixed; right: 20px; bottom: 80px;
+      width: 360px; height: 520px;
       border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 16px;
-      background: rgba(24, 27, 33, 0.95);
-      display: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,.6);
-      backdrop-filter: blur(8px);
-      color: #e6e6e6;
+      border-radius: 16px; background: rgba(24, 27, 33, 0.95);
+      display: none; box-shadow: 0 10px 40px rgba(0,0,0,.6);
+      backdrop-filter: blur(8px); color: #e6e6e6;
     }
-
     .widget header {
       border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding: 12px 16px;
-      font-weight: 600;
-      color: #fff;
+      padding: 12px 16px; font-weight: 600; color: #fff;
     }
-
-    .widget .messages { 
-      height: 400px; 
-      overflow-y: auto; 
-      padding: 12px 16px; 
+    .messages { height: 400px; overflow-y: auto; padding: 12px 16px; }
+    .input { display: flex; border-top: 1px solid rgba(255,255,255,0.08); }
+    .input input {
+      flex: 1; padding: 12px; border: 0; background: rgba(255,255,255,0.05); color: #fff;
     }
-
-    .widget .input { 
-      display: flex; 
-      border-top: 1px solid rgba(255,255,255,0.08); 
-    }
-
-    .widget .input input {
-      flex: 1; 
-      padding: 12px;
-      border: 0;
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-    }
-
-    .widget .input button {
-      border: 0; 
-      padding: 0 16px;
-      cursor: pointer;
-      background: #0ea5e9; 
-      color: #fff;
-    }
+    .input button { border: 0; padding: 0 16px; cursor:pointer; background:#0ea5e9; color:#fff; }
 
     .msg { margin: 8px 0; }
-
     .msg.you { text-align: right; }
-
-    .msg .bubble {
-      display: inline-block;
-      padding: 10px 12px;
-      border-radius: 12px;
-      max-width: 85%;
-    }
-
-    .msg.you .bubble { background: #0f2036; color:#cfe2ff; }
-    .msg.ai .bubble { background: #1e242d; color:#e6e6e6; }
+    .msg .bubble { display:inline-block; padding:10px 12px; border-radius:12px; max-width:85%; }
+    .msg.you .bubble { background:#0f2036; color:#cfe2ff; }
+    .msg.ai  .bubble { background:#1e242d; color:#e6e6e6; }
   </style>
+
 </head>
 
 <body>
-  <header class="wrap">
-    <h1>Sergiu</h1>
-    <p>
-      AI/ML Engineer • Software Developer • 
-      <a href="https://github.com/sergiu123456789">GitHub</a> • 
-      <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a>
-    </p>
-    <p>
-      This page hosts my <strong>AI-powered guided tour agent</strong>. 
-      Recruiters arriving from GitHub or LinkedIn auto-start the tour. 
-      Others can click the chat button.
-    </p>
 
-    <div>
-      <span class="pill">Machine Learning Engineering</span>
-      <span class="pill">LLM Agents & Automations</span>
-      <span class="pill">Deep Learning & NLP</span>
-      <span class="pill">MLOps & Deployment</span>
-      <span class="pill">Cloud AI (AWS / OCI / GCP)</span>
-    </div>
-  </header>
+<header class="wrap">
+  <h1>Sergiu</h1>
+  <p>
+    AI/ML Engineer • Software Developer •
+    <a href="https://github.com/sergiu123456789">GitHub</a> •
+    <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a>
+  </p>
+  <p>
+    This page hosts my <strong>AI-powered guided tour agent</strong>.
+    Recruiters arriving from GitHub or LinkedIn auto-start the tour.
+  </p>
 
-  <main class="wrap">
-    <h2>Highlighted Projects</h2>
-    <ul>
-      <li>
-        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">
-          RAG Q&A Chatbot
-        </a> — Retrieval-augmented generation with embeddings.
-      </li>
-      <li>
-        <a href="https://github.com/sergiu123456789/Agentic-AI">
-          AutoGen, LangGraph & CrewAI
-        </a> — Multi-agent orchestration frameworks.
-      </li>
-      <li>
-        <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">
-          Character AI Chatbot
-        </a> — Personality-driven conversational agent.
-      </li>
-    </ul>
-  </main>
-
-  <!-- CHAT WIDGET -->
-  <div id="widget" class="widget">
-    <header>Recruiter Tour Agent</header>
-    <div id="msgs" class="messages"></div>
-    <div class="input">
-      <input id="inp" placeholder="Ask about projects, outcomes, deployment, impact…" />
-      <button id="send">Send</button>
-    </div>
+  <div>
+    <span class="pill">Machine Learning Engineering</span>
+    <span class="pill">LLM Agents & Automations</span>
+    <span class="pill">Deep Learning & NLP</span>
+    <span class="pill">MLOps & Deployment</span>
+    <span class="pill">Cloud AI (AWS / OCI / GCP)</span>
   </div>
+</header>
 
-  <button id="launch" class="chat-launch">💬 Chat</button>
+<main class="wrap">
+  <h2>Highlighted Projects</h2>
+  <ul>
+    <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">RAG Q&A Chatbot</a></li>
+    <li><a href="https://github.com/sergiu123456789/Agentic-AI">AutoGen, LangGraph & CrewAI</a></li>
+    <li><a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">Character AI Chatbot</a></li>
+  </ul>
+</main>
+
+<!-- CHAT WIDGET -->
+<div id="widget" class="widget">
+  <header>Recruiter Tour Agent</header>
+  <div id="msgs" class="messages"></div>
+  <div class="input">
+    <input id="inp" placeholder="Ask about projects, outcomes, impact…" />
+    <button id="send">Send</button>
+  </div>
+</div>
+
+<button id="launch" class="chat-launch">💬 Chat</button>
 
 <script>
-/* ------------------------------------------------------------------
-   SUPER-SAFE WIDGET LOADER (fixes onclick=null, GitHub Pages timing)
--------------------------------------------------------------------*/
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
 
   function waitForElements() {
     const widget = document.getElementById('widget');
@@ -188,145 +117,107 @@ document.addEventListener("DOMContentLoaded", function () {
     const send   = document.getElementById('send');
 
     if (!widget || !launch || !msgs || !inp || !send) {
-      console.warn("⏳ Waiting for chat widget elements...");
-      return setTimeout(waitForElements, 50);
+      return setTimeout(waitForElements, 30);
     }
 
-    console.log("✅ Widget elements found. Initializing…");
-
-    /* ------------------------------ */
+    /* =============================== */
     const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
     let sessionId = localStorage.getItem("tourSessionId") || null;
 
-    function detectSource() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const src = urlParams.get("src");
-      if (src === "github" || src === "linkedin") return src;
-      const ref = document.referrer.toLowerCase();
-      if (ref.includes("github.com")) return "github";
-      if (ref.includes("linkedin.com")) return "linkedin";
-      return "direct";
-    }
-
-    function showWidget(openIntro = true) {
-      widget.style.display = 'block';
-      if (openIntro && !widget.dataset.opened) {
-        widget.dataset.opened = "1";
-        addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
-      }
-    }
-
-    function addMsg(cls, text) {
-      const d = document.createElement('div');
-      d.className = 'msg ' + cls;
-      d.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br/>')}</div>`;
-      msgs.appendChild(d);
+    const addMsg = (cls, text) => {
+      const div = document.createElement("div");
+      div.className = "msg " + cls;
+      div.innerHTML = `<div class="bubble">${text.replace(/\n/g,"<br/>")}</div>`;
+      msgs.appendChild(div);
       msgs.scrollTop = msgs.scrollHeight;
-    }
+    };
+    const addAI  = (t) => addMsg("ai", t);
+    const addYou = (t) => addMsg("you", t);
 
-    const addYou = (t) => addMsg('you', t);
-    const addAI  = (t) => addMsg('ai',  t);
+    const detectSource = () => {
+      const p = new URLSearchParams(location.search).get("src");
+      if (p === "github" || p === "linkedin") return p;
+      const r = document.referrer.toLowerCase();
+      if (r.includes("github.com"))   return "github";
+      if (r.includes("linkedin.com")) return "linkedin";
+      return "direct";
+    };
 
-    function detectRoleFromMessage(msg) {
-      msg = msg.toLowerCase();
-      const keywords = ["engineer", "scientist", "developer", "ml", "ai", "llm"];
-      if (msg.split(/\s+/).length <= 8) {
-        for (const kw of keywords)
-          if (msg.includes(kw)) return msg.trim();
-      }
+    const detectRole = (msg) => {
+      const m = msg.toLowerCase();
+      const kw = ["engineer","scientist","developer","ai","ml","llm"];
+      if (m.split(/\s+/).length <= 8)
+        if (kw.some(k => m.includes(k))) return msg.trim();
       return null;
-    }
+    };
 
-    function detectCriteriaFromMessage(msg) {
-      msg = msg.toLowerCase();
-      if (msg.includes(",")) {
-        return msg.split(",").map(x => x.trim()).filter(Boolean);
-      }
-      const crit = ["rag", "pipeline", "mlops", "ops", "deployment", "production", "scaling"];
-      for (const w of crit) if (msg.includes(w)) return [msg.trim()];
+    const detectCriteria = (msg) => {
+      const m = msg.toLowerCase();
+      if (m.includes(",")) return m.split(",").map(x=>x.trim()).filter(Boolean);
+      const kw = ["rag","pipeline","mlops","deployment","production","scaling"];
+      if (kw.some(k => m.includes(k))) return [msg.trim()];
       return null;
-    }
+    };
 
     async function sendMessage(message) {
-      const source = detectSource();
+      const lastAI = msgs.querySelector(".msg.ai:last-child");
+      const lastText = lastAI ? lastAI.innerText.toLowerCase() : "";
+
       let role = null;
       let criteria = null;
 
-      const lastAI = msgs.querySelector('.msg.ai:last-child');
-      const lastText = lastAI ? lastAI.innerText.toLowerCase() : "";
+      if (lastText.includes("what role"))       role = detectRole(message);
+      if (lastText.includes("criteria"))        criteria = detectCriteria(message);
 
-      if (lastText.includes("what role")) {
-        role = detectRoleFromMessage(message);
-      }
-      if (lastText.includes("criteria")) {
-        criteria = detectCriteriaFromMessage(message);
-      }
-
-      const payload = { session_id: sessionId, message, source, role, criteria };
+      const payload = {
+        session_id: sessionId,
+        message,
+        source: detectSource(),
+        role,
+        criteria
+      };
 
       addAI("Thinking…");
 
       try {
         const res = await fetch(BACKEND_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
         });
 
         msgs.removeChild(msgs.lastChild);
 
-        if (!res.ok) {
-          return addAI("⚠️ Something went wrong. Please try again.");
-        }
+        if (!res.ok) return addAI("⚠️ Something went wrong.");
 
         const data = await res.json();
         sessionId = data.session_id;
         localStorage.setItem("tourSessionId", sessionId);
         addAI(data.reply);
 
-      } catch (err) {
+      } catch {
         msgs.removeChild(msgs.lastChild);
         addAI("⚠️ Backend unreachable.");
       }
     }
 
-    send.onclick = () => {
-      if (inp.value.trim()) {
-        const msg = inp.value.trim();
-        addYou(msg);
-        sendMessage(msg);
-        inp.value = "";
-      }
-    };
+    launch.onclick = () => { widget.style.display="block"; addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio."); };
+    send.onclick = () => { if (inp.value.trim()) { addYou(inp.value); sendMessage(inp.value); inp.value=""; }};
+    inp.onkeydown = (e) => { if (e.key==="Enter" && inp.value.trim()) { addYou(inp.value); sendMessage(inp.value); inp.value=""; }};
 
-    inp.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && inp.value.trim()) {
-        const msg = inp.value.trim();
-        addYou(msg);
-        sendMessage(msg);
-        inp.value = "";
-      }
-    });
-
-    launch.onclick = () => showWidget();
-
-    (function autoOpen() {
-      const ref = document.referrer.toLowerCase();
-      const src = new URLSearchParams(location.search).get('src')?.toLowerCase();
-
-      const isRecruiter =
-        ref.includes("github.com") ||
-        ref.includes("linkedin.com") ||
-        src === "github" ||
-        src === "linkedin";
+    (function autoOpen(){
+      const r = document.referrer.toLowerCase();
+      const s = new URLSearchParams(location.search).get("src")?.toLowerCase();
+      const isRecruiter = r.includes("github.com") || r.includes("linkedin.com") || s==="github" || s==="linkedin";
 
       if (isRecruiter) {
-        showWidget(true);
+        widget.style.display="block";
         addAI("Hi! I'm your guided-tour agent.");
-        sendMessage("I am a recruiter from GitHub/LinkedIn. Show me relevant AI/ML projects.");
+        sendMessage("I am a recruiter visiting. Show me relevant AI/ML projects.");
       }
     })();
-  }
+
+  } // end waitForElements()
 
   waitForElements();
 });
