@@ -40,24 +40,24 @@
 
     /* Chat widget */
     .chat-launch {
-      position: fixed; 
-      right: 20px; 
+      position: fixed;
+      right: 20px;
       bottom: 20px;
-      border: 0; 
+      border: 0;
       padding: 12px 16px;
       border-radius: 999px;
       cursor: pointer;
-      background: #0ea5e9; 
-      color: #fff; 
+      background: #0ea5e9;
+      color: #fff;
       font-weight: 600;
       box-shadow: 0 4px 20px rgba(0,0,0,.6);
     }
 
     .widget {
-      position: fixed; 
-      right: 20px; 
+      position: fixed;
+      right: 20px;
       bottom: 80px;
-      width: 360px; 
+      width: 360px;
       height: 520px;
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 16px;
@@ -75,19 +75,20 @@
       color: #fff;
     }
 
-    .widget .messages { 
-      height: 400px; 
-      overflow-y: auto; 
-      padding: 12px 16px; 
+    .widget .messages {
+      height: 400px;
+      overflow-y: auto;
+      padding: 12px 16px;
+      font-size: 14px;
     }
 
-    .widget .input { 
-      display: flex; 
-      border-top: 1px solid rgba(255,255,255,0.08); 
+    .widget .input {
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.08);
     }
 
     .widget .input input {
-      flex: 1; 
+      flex: 1;
       padding: 12px;
       border: 0;
       background: rgba(255,255,255,0.05);
@@ -95,10 +96,10 @@
     }
 
     .widget .input button {
-      border: 0; 
+      border: 0;
       padding: 0 16px;
       cursor: pointer;
-      background: #0ea5e9; 
+      background: #0ea5e9;
       color: #fff;
     }
 
@@ -121,14 +122,14 @@
   <header class="wrap">
     <h1>Sergiu</h1>
     <p>
-      AI/ML Engineer • Software Developer • 
-      <a href="https://github.com/sergiu123456789">GitHub</a> • 
+      AI/ML Engineer • Software Developer •
+      <a href="https://github.com/sergiu123456789">GitHub</a> •
       <a href="https://www.linkedin.com/in/sergiu-nicoara-31b27013/">LinkedIn</a>
     </p>
     <p>
-      This page hosts my <strong>AI-powered guided tour agent</strong>. 
-      Recruiters arriving from GitHub or LinkedIn auto-start the tour. 
-      Others can click the chat button.
+      This page hosts my <strong>AI-powered recruiter tour agent</strong>.<br/>
+      If you’re coming from GitHub or LinkedIn, the tour auto-starts and
+      <strong>matches your open role to my projects, skills & impact.</strong>
     </p>
 
     <div>
@@ -146,17 +147,20 @@
       <li>
         <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/%23%20Customized%20Chatbot%20with%20RAG.md">
           RAG Q&A Chatbot
-        </a> — Retrieval-augmented generation pipeline.
+        </a>
+        — Retrieval-augmented generation pipeline with embeddings, vector search and FastAPI backend.
       </li>
       <li>
         <a href="https://github.com/sergiu123456789/Agentic-AI">
           AutoGen / LangGraph / CrewAI
-        </a> — Multi-agent orchestration systems.
+        </a>
+        — Multi-agent orchestration systems and workflows.
       </li>
       <li>
         <a href="https://github.com/sergiu123456789/Generative-AI/blob/main/Character%20AI%20Chatbot.md">
           Character AI Chatbot
-        </a> — Persona-driven conversational agent.
+        </a>
+        — Persona-driven conversational agent.
       </li>
     </ul>
   </main>
@@ -166,12 +170,12 @@
     <header>Recruiter Tour Agent</header>
     <div id="msgs" class="messages"></div>
     <div class="input">
-      <input id="inp" placeholder="Ask about roles, projects, impact…" />
+      <input id="inp" placeholder="Paste a JD or ask about fit, impact, CV…" />
       <button id="send">Send</button>
     </div>
   </div>
 
-  <button id="launch" class="chat-launch">💬 Chat</button>
+  <button id="launch" class="chat-launch">💬 Chat with the AI tour</button>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -187,7 +191,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return setTimeout(initWhenReady, 40);
     }
 
-    const BACKEND_URL = "https://portfolio-agent-1022606085700.europe-west1.run.app/chat";
+    // TODO: update this to your Cloud Run URL in production
+    // e.g. const BACKEND_URL = "https://recruiter-agent-xxxxx-ew.a.run.app/chat";
+    const BACKEND_URL = "https://recruiter-agent-190861422358.europe-west1.run.app";
+
     let sessionId = localStorage.getItem("tourSessionId") || null;
 
     function detectSource() {
@@ -217,7 +224,11 @@ document.addEventListener("DOMContentLoaded", function () {
       widget.style.display = "block";
       if (intro && !widget.dataset.opened) {
         widget.dataset.opened = "1";
-        addAI("Welcome. I'm the guided-tour agent for Sergiu's portfolio.");
+        addAI(
+          "👋 Hi! I’m Sergiu’s AI recruiter tour agent.\n\n" +
+          "Paste a job description or tell me the role you’re hiring for, " +
+          "and I’ll highlight the most relevant projects, skills, and impact."
+        );
       }
     }
 
@@ -228,7 +239,6 @@ document.addEventListener("DOMContentLoaded", function () {
         session_id: sessionId,
         message,
         source
-        // role & criteria intentionally omitted — backend controls flow
       };
 
       addAI("Thinking…");
@@ -293,8 +303,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (isRecruiter) {
         showWidget(true);
-        addAI("Hi! I'm your guided-tour agent.");
-        sendMessage("I'm a recruiter visiting from GitHub/LinkedIn. Show me the most relevant AI/ML projects.");
+        sendMessage(
+          "I'm a recruiter visiting from GitHub/LinkedIn. " +
+          "Please show me the most relevant AI/ML projects and ATS summary."
+        );
       }
     })();
   }
