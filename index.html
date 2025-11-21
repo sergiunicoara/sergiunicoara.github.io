@@ -1,94 +1,483 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Sergiu’s AI Recruiter Agent</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8" />
+  <title>Sergiu’s AI Recruiter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Tailwind (CDN) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
 
-    <style>
-      body { background-color: #0f172a; }
-    </style>
-  </head>
+  <!-- Optional: Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
 
-  <body class="h-full text-slate-100">
-    <div class="min-h-full flex flex-col">
-
-      <!-- HEADER BAR -->
-      <header class="border-b border-slate-700/50 bg-slate-900/50 backdrop-blur">
-        <div class="mx-auto max-w-5xl px-4 py-4 flex items-center space-x-3">
-
-          <!-- ⭐ Restored SR icon -->
+  <style>
+    /* Custom scrollbar for chat */
+    .nice-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .nice-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .nice-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.6);
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 font-sans">
+  <div class="min-h-screen flex flex-col">
+    <!-- Top bar -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
           <div class="h-8 w-8 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center">
             <span class="text-sky-400 font-semibold text-sm">SR</span>
           </div>
-
-          <!-- Title -->
-          <h1 class="text-xl font-semibold tracking-tight text-slate-100">
-            Sergiu’s AI Recruiter Agent
-          </h1>
+          <div>
+            <h1 class="text-sm sm:text-base font-semibold text-slate-50">
+              Sergiu’s AI Recruiter
+            </h1>
+            <p class="text-xs text-slate-400">
+              Paste a job description or describe the role. I’ll map Sergiu’s experience to it.
+            </p>
+          </div>
         </div>
-      </header>
-
-      <!-- MAIN APP -->
-      <main class="flex-1 mx-auto max-w-5xl w-full px-4 py-6">
-
-        <!-- Intro Section -->
-        <div class="mb-6">
-          <p class="text-slate-300 text-lg">
-            Paste a job description or describe the role you’re hiring for.
-          </p>
-          <p class="text-slate-400 text-sm mt-1">
-            I’ll extract the key requirements, analyze Sergiu’s experience, and generate a tailored recruiter-focused match.
-          </p>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+            Live Demo
+          </span>
+          <span class="hidden sm:inline text-xs text-slate-500">
+            Backend: FastAPI · Gemini · RAG · CI-gated
+          </span>
         </div>
+      </div>
+    </header>
 
-        <!-- Chat Output -->
-        <div id="output"
-             class="whitespace-pre-wrap p-4 rounded-xl border border-slate-700 bg-slate-800/30 text-slate-200 min-h-[200px]">
-        </div>
+    <!-- Main layout -->
+    <main class="flex-1">
+      <div class="max-w-6xl mx-auto px-4 py-4 sm:py-6 grid gap-4 lg:grid-cols-[1.8fr,1.2fr]">
+        <!-- Chat panel -->
+        <section
+          class="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/40 shadow-[0_18px_45px_rgba(15,23,42,0.75)] overflow-hidden"
+        >
+          <!-- Chat header -->
+          <div class="px-4 sm:px-5 py-3 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-100">Conversation</h2>
+              <p class="text-xs text-slate-400">
+                I’ll explain how Sergiu fits the role and highlight relevant projects.
+              </p>
+            </div>
+            <button
+              id="resetBtn"
+              class="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:bg-slate-800/90 transition"
+              type="button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M4.5 4.5A7 7 0 0117 10a.75.75 0 001.5 0A8.5 8.5 0 101.53 9.47a.75.75 0 001.06 1.06A7 7 0 014.5 4.5zm3.75 1a.75.75 0 01.75.75v3.19l2.22 2.22a.75.75 0 11-1.06 1.06L7.5 10.56V6.25A.75.75 0 018.25 5.5z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              New session
+            </button>
+          </div>
 
-        <!-- Input Form -->
-        <form id="chat-form" class="mt-6 flex space-x-2">
-          <input
-            id="prompt-input"
-            type="text"
-            placeholder="Paste job description or role…"
-            class="flex-1 px-3 py-2 bg-slate-800/80 border border-slate-700/50 rounded-lg text-slate-100"
-          />
-          <button
-            type="submit"
-            class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold">
-            Analyze
-          </button>
-        </form>
-      </main>
-    </div>
+          <!-- Messages -->
+          <div
+            id="chatMessages"
+            class="flex-1 px-3 sm:px-4 py-3 space-y-3 overflow-y-auto nice-scrollbar"
+            style="max-height: 520px;"
+          >
+            <!-- Initial agent message -->
+            <div class="flex items-start gap-2 sm:gap-3">
+              <div class="mt-1 h-7 w-7 flex-shrink-0 rounded-full bg-sky-500/20 border border-sky-500/50 flex items-center justify-center text-[11px] text-sky-300 font-semibold">
+                AI
+              </div>
+              <div class="bg-slate-800/70 border border-slate-700/70 rounded-2xl rounded-tl-sm px-3 py-2.5 sm:px-3.5 sm:py-3 text-xs sm:text-sm text-slate-100 max-w-[90%]">
+                <p class="mb-1.5">
+                  👋 I’m Sergiu’s AI recruiter tour agent.
+                </p>
+                <p class="mb-1">
+                  Paste a job description or describe the role you’re hiring for. I’ll:
+                </p>
+                <ul class="list-disc list-inside space-y-0.5 text-slate-200/90">
+                  <li>Extract key requirements and priorities</li>
+                  <li>Match Sergiu’s most relevant projects & impact</li>
+                  <li>Explain <span class="font-semibold text-sky-300">why</span> he’s a fit in recruiter language</li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
-    <!-- CLIENT SCRIPT -->
-    <script>
-      const form = document.getElementById("chat-form");
-      const input = document.getElementById("prompt-input");
-      const output = document.getElementById("output");
+          <!-- Input area -->
+          <form id="chatForm" class="border-t border-slate-800 bg-slate-950/70">
+            <div class="px-3 sm:px-4 py-2.5 space-y-2">
+              <div class="flex items-center justify-between text-[11px] text-slate-500">
+                <span>Tip: paste the full job description for best results.</span>
+                <span class="hidden sm:inline">Shift + Enter for new line</span>
+              </div>
+              <div
+                class="flex items-end gap-2 rounded-2xl border border-slate-700 bg-slate-900/80 px-2.5 py-2 focus-within:border-sky-500/70 focus-within:ring-1 focus-within:ring-sky-500/40 transition"
+              >
+                <textarea
+                  id="messageInput"
+                  rows="2"
+                  placeholder="E.g. “We’re hiring a Senior ML Engineer to own production RAG systems…”"
+                  class="flex-1 bg-transparent text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 resize-none focus:outline-none"
+                ></textarea>
+                <button
+                  id="sendBtn"
+                  type="submit"
+                  class="inline-flex items-center justify-center rounded-xl bg-sky-500 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-950 shadow-sm hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-sky-500 focus-visible:ring-offset-slate-950 disabled:opacity-60 disabled:cursor-not-allowed transition"
+                >
+                  <span id="sendBtnText" class="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-3.5 w-3.5 mr-1.5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M3.172 16.828a.75.75 0 001.06.0l9.193-9.193-2.829-.586a.75.75 0 01-.572-.572l-.586-2.829-9.193 9.193a.75.75 0 000 1.06l2.927 2.927z"
+                      />
+                      <path
+                        d="M6.414 17H16.25a.75.75 0 00.75-.75V6.414l-2 2v6.336H8.414l-2 2z"
+                      />
+                    </svg>
+                    Send
+                  </span>
+                  <span id="sendBtnLoading" class="hidden items-center">
+                    <svg
+                      class="animate-spin h-4 w-4 mr-1.5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4l3.5-3.5L12 1v4a7 7 0 00-7 7h-1z"
+                      ></path>
+                    </svg>
+                    Thinking…
+                  </span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const prompt = input.value.trim();
-        if (!prompt) return;
+        <!-- Side panel: context + debug -->
+        <aside class="space-y-4">
+          <!-- Role & criteria summary (textual, inferred) -->
+          <section class="rounded-2xl border border-slate-800 bg-slate-900/40 px-4 py-4 sm:px-5 sm:py-5">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-sm font-semibold text-slate-100 flex items-center gap-1.5">
+                <span class="h-5 w-5 rounded-md bg-sky-500/20 border border-sky-500/60 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3 w-3 text-sky-300"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M10.75 4.75a2.75 2.75 0 11-5.5 0 2.75 2.75 0 015.5 0zM3.5 10.5A2.5 2.5 0 016 8h3.5a2.5 2.5 0 012.5 2.5v.25A4.75 4.75 0 017.25 15.5h-1.5A2.75 2.75 0 013 12.75v-2.25zM14.75 6a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM13 9.5a3 3 0 013 3v.25A3.25 3.25 0 0112.75 16H11a.75.75 0 01-.75-.75v-.5A3.25 3.25 0 0113.5 11.5H13a.75.75 0 01-.75-.75V9.5z"
+                    />
+                  </svg>
+                </span>
+                Role & priorities
+              </h2>
+              <span id="sessionBadge" class="text-[10px] uppercase tracking-wide text-slate-500">
+                No session
+              </span>
+            </div>
+            <div class="space-y-2 text-xs sm:text-sm text-slate-300">
+              <p id="roleSummary" class="text-slate-300">
+                Start a conversation to infer the target role and what you care about (ownership, impact, ML, etc.).
+              </p>
+              <div>
+                <p class="text-[11px] uppercase tracking-wide text-slate-500 mb-1">
+                  Suggested prompts
+                </p>
+                <ul class="space-y-1">
+                  <li class="flex items-start gap-1.5">
+                    <span class="mt-0.5 block h-1 w-1 rounded-full bg-slate-500"></span>
+                    <button
+                      class="text-left text-xs text-slate-300 hover:text-sky-300 transition prompt-btn"
+                      data-prompt="We’re hiring a Senior ML Engineer to own production RAG systems and mentor a small team. Show me how Sergiu matches this."
+                    >
+                      Senior ML Engineer owning production RAG
+                    </button>
+                  </li>
+                  <li class="flex items-start gap-1.5">
+                    <span class="mt-0.5 block h-1 w-1 rounded-full bg-slate-500"></span>
+                    <button
+                      class="text-left text-xs text-slate-300 hover:text-sky-300 transition prompt-btn"
+                      data-prompt="Here is the full job description. Extract the main requirements and show me the most relevant projects and impact from Sergiu’s CV."
+                    >
+                      Paste full JD and ask for project mapping
+                    </button>
+                  </li>
+                  <li class="flex items-start gap-1.5">
+                    <span class="mt-0.5 block h-1 w-1 rounded-full bg-slate-500"></span>
+                    <button
+                      class="text-left text-xs text-slate-300 hover:text-sky-300 transition prompt-btn"
+                      data-prompt="I care most about ownership, production experience and communication with non-technical stakeholders. Highlight those specifically."
+                    >
+                      Emphasize ownership & communication
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
 
-        output.textContent = "Thinking…";
+          <!-- How it works / tech panel -->
+          <section class="rounded-2xl border border-slate-800 bg-slate-900/40 px-4 py-4 sm:px-5 sm:py-5">
+            <h2 class="text-sm font-semibold text-slate-100 mb-2 flex items-center gap-1.5">
+              <span class="h-5 w-5 rounded-md bg-emerald-500/15 border border-emerald-500/50 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-emerald-300" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fill-rule="evenodd"
+                    d="M10.75 2.75a.75.75 0 00-1.5 0v3.69L7.03 4.22a.75.75 0 10-1.06 1.06L8.69 8l-2.72 2.72a.75.75 0 101.06 1.06l2.22-2.22v3.69a.75.75 0 001.5 0v-3.69l2.22 2.22a.75.75 0 101.06-1.06L11.31 8l2.72-2.72a.75.75 0 00-1.06-1.06L10.75 6.44V2.75z"
+                    clip-rule="evenodd"
+                  />
+                  <path
+                    d="M4.25 4A2.25 2.25 0 002 6.25v7.5A2.25 2.25 0 004.25 16h11.5A2.25 2.25 0 0018 13.75v-7.5A2.25 2.25 0 0015.75 4h-1.482a.75.75 0 000 1.5h1.482a.75.75 0 01.75.75v7.5a.75.75 0 01-.75.75H4.25a.75.75 0 01-.75-.75v-7.5a.75.75 0 01.75-.75h1.482a.75.75 0 000-1.5H4.25z"
+                  />
+                </svg>
+              </span>
+              Under the hood
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 mb-3">
+              This demo runs a production-style agent stack:
+            </p>
+            <ul class="space-y-1.5 text-xs text-slate-300">
+              <li class="flex gap-2">
+                <span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                <span><span class="font-semibold text-slate-100">Gemini agent</span> with tools (CV RAG, GitHub portfolio, scoring)</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                <span>Session + memory + trajectory logging in SQLite</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                <span>LLM-as-Judge evaluation & CI quality gate</span>
+              </li>
+              <li class="flex gap-2">
+                <span class="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                <span>OpenTelemetry traces for each turn (/chat)</span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- Small status / error area -->
+          <section class="rounded-2xl border border-slate-800 bg-slate-900/40 px-4 py-3 sm:px-5 sm:py-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-300">Status</span>
+              <span id="statusDot" class="inline-flex items-center text-[11px] text-emerald-300">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+                Ready
+              </span>
+            </div>
+            <p id="statusMsg" class="mt-1.5 text-[11px] text-slate-500">
+              Connected to backend on this origin (<code class="text-slate-400">/chat</code>).
+            </p>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const chatForm = document.getElementById("chatForm");
+    const messageInput = document.getElementById("messageInput");
+    const chatMessages = document.getElementById("chatMessages");
+    const sendBtn = document.getElementById("sendBtn");
+    const sendBtnText = document.getElementById("sendBtnText");
+    const sendBtnLoading = document.getElementById("sendBtnLoading");
+    const resetBtn = document.getElementById("resetBtn");
+    const sessionBadge = document.getElementById("sessionBadge");
+    const roleSummary = document.getElementById("roleSummary");
+    const statusDot = document.getElementById("statusDot");
+    const statusMsg = document.getElementById("statusMsg");
+    const promptButtons = document.querySelectorAll(".prompt-btn");
+
+    let sessionId = null;
+
+    function setLoading(isLoading) {
+      if (isLoading) {
+        sendBtn.disabled = true;
+        sendBtnText.classList.add("hidden");
+        sendBtnLoading.classList.remove("hidden");
+        statusDot.innerHTML =
+          '<span class="h-1.5 w-1.5 rounded-full bg-sky-400 mr-1.5 animate-pulse"></span>Thinking…';
+        statusMsg.textContent = "The agent is reasoning over the CV and tools.";
+      } else {
+        sendBtn.disabled = false;
+        sendBtnText.classList.remove("hidden");
+        sendBtnLoading.classList.add("hidden");
+        statusDot.innerHTML =
+          '<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5"></span>Ready';
+        statusMsg.textContent = "Connected to backend on this origin (/chat).";
+      }
+    }
+
+    function addMessage(sender, text) {
+      const wrapper = document.createElement("div");
+      wrapper.className =
+        "flex items-start gap-2 sm:gap-3 animate-[fadeIn_0.18s_ease-out]";
+      const isAgent = sender === "agent";
+
+      const avatar = document.createElement("div");
+      avatar.className =
+        "mt-1 h-7 w-7 flex-shrink-0 rounded-full flex items-center justify-center text-[11px] font-semibold " +
+        (isAgent
+          ? "bg-sky-500/20 border border-sky-500/50 text-sky-300"
+          : "bg-slate-700/60 border border-slate-500/60 text-slate-100");
+      avatar.textContent = isAgent ? "AI" : "You";
+
+      const bubble = document.createElement("div");
+      bubble.className =
+        "max-w-[90%] rounded-2xl px-3 py-2.5 sm:px-3.5 sm:py-3 text-xs sm:text-sm whitespace-pre-wrap " +
+        (isAgent
+          ? "bg-slate-800/80 border border-slate-700 text-slate-100 rounded-tl-sm"
+          : "bg-sky-500 text-slate-950 rounded-tr-sm");
+
+      bubble.textContent = text;
+
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(bubble);
+      chatMessages.appendChild(wrapper);
+
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage(message) {
+      if (!message.trim()) return;
+      addMessage("user", message);
+      messageInput.value = "";
+      setLoading(true);
+
+      try {
+        const payload = {
+          session_id: sessionId,
+          message,
+          source: "web-ui",
+        };
 
         const res = await fetch("/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         });
 
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
         const data = await res.json();
-        output.textContent = data.reply || "(No response)";
+        sessionId = data.session_id;
+        sessionBadge.textContent = sessionId;
+        sessionBadge.classList.remove("text-slate-500");
+        sessionBadge.classList.add("text-sky-300");
+
+        // Display agent reply
+        addMessage("agent", data.reply || "");
+
+        // Very light heuristic to update the “role summary” panel:
+        if (data.reply) {
+          // Try to grab first sentence mentioning "role" or "position"
+          const sentences = data.reply.split(/(?<=[.!?])\s+/);
+          const interesting = sentences.find((s) =>
+            /role|position|hiring|fit/i.test(s)
+          );
+          if (interesting) {
+            roleSummary.textContent = interesting;
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        statusDot.innerHTML =
+          '<span class="h-1.5 w-1.5 rounded-full bg-rose-500 mr-1.5"></span>Error';
+        statusMsg.textContent =
+          "Request failed. Check the Cloud Run service URL / CORS config.";
+        addMessage(
+          "agent",
+          "⚠️ I couldn’t reach the backend. Please make sure the FastAPI service is running and this page is served from the same origin."
+        );
+      } finally {
+        setLoading(false);
+        messageInput.focus();
+      }
+    }
+
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const message = messageInput.value;
+      sendMessage(message);
+    });
+
+    messageInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        chatForm.dispatchEvent(new Event("submit"));
+      }
+    });
+
+    resetBtn.addEventListener("click", () => {
+      sessionId = null;
+      sessionBadge.textContent = "No session";
+      sessionBadge.classList.remove("text-sky-300");
+      sessionBadge.classList.add("text-slate-500");
+      chatMessages.innerHTML = "";
+      roleSummary.textContent =
+        "Start a conversation to infer the target role and what you care about (ownership, impact, ML, etc.).";
+      // Re-add initial agent message
+      addMessage(
+        "agent",
+        "New session started. Paste a job description or describe the role, and I’ll map Sergiu’s experience to it."
+      );
+    });
+
+    promptButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const prompt = btn.getAttribute("data-prompt") || "";
+        messageInput.value = prompt;
+        messageInput.focus();
       });
-    </script>
-  </body>
+    });
+  </script>
+</body>
 </html>
