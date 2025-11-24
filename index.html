@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <title>Sergiu – AI Recruiter Agent</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
@@ -14,125 +12,94 @@
       }
     </style>
   </head>
+
   <body class="h-full text-slate-100">
     <div class="min-h-screen flex flex-col">
-      <!-- Nav -->
+
       <header class="w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
         <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div class="flex items-center space-x-3">
-            <div
-              class="h-8 w-8 rounded-xl bg-sky-500/15 border border-sky-500/40 flex items-center justify-center"
-            >
+            <div class="h-8 w-8 rounded-xl bg-sky-500/15 border border-sky-500/40 flex items-center justify-center">
               <span class="text-sky-400 font-semibold text-xs">SR</span>
             </div>
-            <span class="font-semibold tracking-tight text-slate-50">
-              Sergiu’s AI Recruiter Agent
-            </span>
+            <span class="font-semibold tracking-tight">Sergiu’s AI Recruiter Agent</span>
           </div>
+
           <div class="flex items-center space-x-3 text-sm">
-            <a
-              href="https://www.linkedin.com/"
-              class="text-slate-300 hover:text-sky-400"
-              target="_blank"
-              rel="noreferrer"
-            >
-              LinkedIn
-            </a>
-            <a
-              href="https://github.com/sergiu123456789"
-              class="text-slate-300 hover:text-sky-400"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub
-            </a>
+            <a href="https://www.linkedin.com" target="_blank" class="text-slate-300 hover:text-sky-400">LinkedIn</a>
+            <a href="https://github.com/sergiu123456789" target="_blank" class="text-slate-300 hover:text-sky-400">GitHub</a>
           </div>
         </div>
       </header>
 
-      <!-- Main -->
       <main class="flex-1">
-        <div class="max-w-5xl mx-auto px-4 py-10 lg:py-16 grid gap-10 lg:grid-cols-[1.3fr,1fr]">
-          <!-- Left column: hero -->
+        <div class="max-w-5xl mx-auto px-4 py-10 grid gap-10 lg:grid-cols-[1.3fr,1fr]">
+
           <section>
             <div class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 mb-4">
               Live AI agent · Built with Gemini & FastAPI
             </div>
 
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-50">
-              An AI recruiter that explains how
-              <span class="text-sky-400">Sergiu</span> fits your role.
+            <h1 class="text-4xl font-semibold tracking-tight text-slate-50">
+              An AI recruiter that explains how <span class="text-sky-400">Sergiu</span> fits your role.
             </h1>
 
-            <p class="mt-4 text-slate-300 text-base sm:text-lg">
-              Paste any job description. The agent extracts the core requirements, searches Sergiu’s
-              CV & portfolio, and explains the match in clear recruiter language.
+            <p class="mt-4 text-slate-300 text-lg">
+              Paste any job description. The agent extracts requirements, searches Sergiu’s portfolio,
+              and produces recruiter-friendly summaries.
             </p>
 
-            <div class="mt-6 flex flex-wrap gap-3">
-              <!-- 🔗 LIVE DEMO ON CLOUD RUN (UPDATED) -->
+            <div class="mt-6 flex gap-3">
               <a
                 href="https://recruiter-agent-190861422358.europe-west1.run.app/"
-                class="inline-flex items-center justify-center rounded-lg bg-sky-500 hover:bg-sky-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm"
+                class="rounded-lg bg-sky-500 hover:bg-sky-400 px-5 py-2.5 text-sm font-semibold text-slate-950"
               >
                 Open Live Demo
               </a>
 
-              <!-- 🔗 SOURCE CODE -->
               <a
                 href="https://github.com/sergiu123456789/recruiter-agent"
-                class="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 hover:border-slate-500"
                 target="_blank"
-                rel="noreferrer"
+                class="rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 hover:border-slate-500"
               >
-                View Source on GitHub
+                View Source
               </a>
             </div>
 
             <dl class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-slate-300">
-              <div>
-                <dt class="text-slate-400">Stack</dt>
-                <dd class="font-medium">FastAPI · Gemini · RAG</dd>
-              </div>
-              <div>
-                <dt class="text-slate-400">Focus</dt>
-                <dd class="font-medium">Production-style agent design</dd>
-              </div>
-              <div>
-                <dt class="text-slate-400">Extras</dt>
-                <dd class="font-medium">Session memory · Judge · CI gate</dd>
-              </div>
+              <div><dt class="text-slate-400">Stack</dt><dd class="font-medium">FastAPI · Gemini · RAG</dd></div>
+              <div><dt class="text-slate-400">Focus</dt><dd class="font-medium">Production Agents</dd></div>
+              <div><dt class="text-slate-400">Extras</dt><dd class="font-medium">Sessions · Judge · SQLite</dd></div>
             </dl>
           </section>
 
-          <!-- Right column -->
           <section class="space-y-4">
             <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 text-sm">
               <h2 class="font-semibold text-slate-50 mb-2">What this agent does</h2>
               <ul class="list-disc list-inside space-y-1 text-slate-300">
-                <li>Understands job descriptions and extracts key requirements.</li>
-                <li>Maps those requirements to Sergiu’s real projects & impact.</li>
-                <li>Produces recruiter-friendly summaries and talking points.</li>
-                <li>Uses RAG over CV and portfolio with Gemini tools.</li>
+                <li>Understands job descriptions</li>
+                <li>Matches to Sergiu’s work</li>
+                <li>Explains recruiter relevance</li>
+                <li>Powered by Gemini + RAG</li>
               </ul>
             </div>
 
             <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 text-sm">
-              <h2 class="font-semibold text-slate-50 mb-2">Why it’s interesting</h2>
+              <h2 class="font-semibold text-slate-50 mb-2">Why it’s cool</h2>
               <ul class="list-disc list-inside space-y-1 text-slate-300">
-                <li>Implements a multi-step agent loop with tools and judge.</li>
-                <li>Tracks sessions, memory and trajectories in SQLite.</li>
-                <li>CI gate using LLM-as-Judge before deployments.</li>
-                <li>Ready to embed in recruiter workflows or ATS tooling.</li>
+                <li>Multi-step agent loop</li>
+                <li>Judging, memory & SQLite</li>
+                <li>CI gate using LLM-as-judge</li>
+                <li>Production deployment ready</li>
               </ul>
             </div>
           </section>
+
         </div>
       </main>
 
-      <!-- Footer -->
-      <footer class="border-t border-slate-800/80 bg-slate-950/90">
-        <div class="max-w-5xl mx-auto px-4 py-4 text-xs text-slate-500 flex flex-wrap justify-between gap-2">
+      <footer class="border-t border-slate-800 bg-slate-950/90 text-xs text-slate-500 py-4 px-4">
+        <div class="max-w-5xl mx-auto flex justify-between">
           <span>© Sergiu — AI/ML Engineer.</span>
           <span>Demo: Gemini · FastAPI · Cloud Run.</span>
         </div>
