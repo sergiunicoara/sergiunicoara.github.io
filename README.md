@@ -1,5 +1,5 @@
 📊 Evaluation Pipeline — LLM-as-a-Judge
-```marmeid
+```mermaid
 flowchart LR
     CASES["Golden Eval Cases"] --> RUN["Eval Runner"]
     RUN --> CHAT["/chat Endpoint"]
