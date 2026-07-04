@@ -306,6 +306,46 @@ select.blank.wrong {
   font-size: 0.95rem;
 }
 
+.leaderboard {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee6da;
+  margin-bottom: 10px;
+}
+
+.leaderboard h3 {
+  margin: 0 0 8px;
+  color: var(--accent);
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 10px;
+}
+
+.leaderboard-row.me {
+  background: #f1eefb;
+  font-weight: 700;
+}
+
+.leaderboard-row .rank {
+  width: 22px;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.leaderboard-row .who {
+  flex: 1;
+}
+
+.leaderboard-row .pts {
+  color: var(--good);
+  font-weight: 700;
+}
+
 .stat-user {
   padding: 10px 0;
 }

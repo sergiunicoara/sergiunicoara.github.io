@@ -82,7 +82,30 @@ const Tracker = (() => {
     return res.json();
   }
 
+  const DEFAULT_LEADERBOARD_SIZE = 5;
+
+  async function fetchConfig() {
+    if (!enabled) return { leaderboard_size: DEFAULT_LEADERBOARD_SIZE };
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/app_config?select=leaderboard_size&limit=1`,
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const rows = await res.json();
+      return rows[0] || { leaderboard_size: DEFAULT_LEADERBOARD_SIZE };
+    } catch {
+      // tabel lipsă sau offline — clasamentul tot funcționează, cu valoarea implicită
+      return { leaderboard_size: DEFAULT_LEADERBOARD_SIZE };
+    }
+  }
+
   window.addEventListener("online", flush);
 
-  return { enabled, log, flush, fetchAll };
+  return { enabled, log, flush, fetchAll, fetchConfig };
 })();

@@ -261,38 +261,79 @@ async function renderStats() {
 
   wrap.innerHTML = "<p>Se încarcă…</p>";
   try {
-    const events = await Tracker.fetchAll();
+    const [events, config] = await Promise.all([Tracker.fetchAll(), Tracker.fetchConfig()]);
     if (events.length === 0) {
       wrap.innerHTML = "<p>Nicio activitate înregistrată încă.</p>";
     } else {
-      renderStatsContent(wrap, events);
+      renderStatsContent(wrap, events, config.leaderboard_size);
     }
   } catch {
     wrap.innerHTML = "<p>Statisticile au nevoie de internet. Încearcă din nou mai târziu.</p>";
   }
 }
 
-function renderStatsContent(wrap, events) {
+// Reface exact regulile de punctaj din joc (checkAnswers/celebrate), pornind
+// doar din evenimentele brute — nu există un tabel separat de scor.
+function computePointsForUser(userEvents) {
+  const correctVerses = new Set(userEvents.filter((e) => e.correct).map((e) => e.verse_ref));
+  let points = correctVerses.size * POINTS_PER_VERSE;
+
+  for (let i = 0; i < VERSES.length; i += PAGE_SIZE) {
+    const pageRefs = VERSES.slice(i, i + PAGE_SIZE).map((v) => v.ref);
+    const pageEvents = userEvents.filter((e) => pageRefs.includes(e.verse_ref));
+    const allSolved = pageRefs.every((ref) => correctVerses.has(ref));
+    const anyMistake = pageEvents.some((e) => !e.correct);
+    if (allSolved && !anyMistake) points += PAGE_CLEAN_BONUS;
+  }
+  return points;
+}
+
+function groupByUser(events) {
   const byUser = new Map();
   for (const e of events) {
     if (!byUser.has(e.user_name)) byUser.set(e.user_name, []);
     byUser.get(e.user_name).push(e);
   }
+  return byUser;
+}
+
+function renderStatsContent(wrap, events, leaderboardSize) {
+  const byUser = groupByUser(events);
+  const ranking = [...byUser.entries()]
+    .map(([name, evts]) => ({ name, points: computePointsForUser(evts) }))
+    .sort((a, b) => b.points - a.points);
 
   wrap.innerHTML = "";
-  for (const [name, evts] of byUser) {
-    const total = evts.length;
-    const correct = evts.filter((e) => e.correct).length;
+
+  const board = document.createElement("div");
+  board.className = "leaderboard";
+  board.innerHTML = "<h3>🏆 Clasament</h3>";
+  ranking.slice(0, leaderboardSize).forEach((entry, i) => {
+    const row = document.createElement("div");
+    row.className = "leaderboard-row" + (entry.name === userName ? " me" : "");
+    row.innerHTML = `<span class="rank">${i + 1}</span><span class="who">${entry.name}</span><span class="pts">${entry.points} pct</span>`;
+    board.appendChild(row);
+  });
+  wrap.appendChild(board);
+
+  // Statisticile proprii — doar greșelile utilizatorului curent, nu ale altora.
+  const mine = document.createElement("div");
+  mine.className = "stat-user";
+  const myEvents = byUser.get(userName);
+  if (!myEvents) {
+    mine.innerHTML = `<h3>👤 Statisticile mele</h3><p>Nu ai încă activitate înregistrată.</p>`;
+  } else {
+    const total = myEvents.length;
+    const correct = myEvents.filter((e) => e.correct).length;
     const accuracy = Math.round((correct / total) * 100);
-    const distinctVerses = new Set(evts.filter((e) => e.correct).map((e) => e.verse_ref)).size;
-    const lastDay = new Date(evts[0].created_at).toLocaleDateString("ro-RO", {
+    const distinctVerses = new Set(myEvents.filter((e) => e.correct).map((e) => e.verse_ref)).size;
+    const lastDay = new Date(myEvents[0].created_at).toLocaleDateString("ro-RO", {
       day: "numeric",
       month: "short",
     });
 
-    // greșeli grupate pe verset, cu cuvintele alese greșit
     const mistakes = new Map();
-    for (const e of evts) {
+    for (const e of myEvents) {
       if (e.correct) continue;
       if (!mistakes.has(e.verse_ref)) {
         mistakes.set(e.verse_ref, { count: 0, wrong: new Set(), answer: e.answer });
@@ -301,19 +342,15 @@ function renderStatsContent(wrap, events) {
       m.count += 1;
       m.wrong.add(e.chosen);
     }
-    const topMistakes = [...mistakes.entries()]
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 5);
+    const topMistakes = [...mistakes.entries()].sort((a, b) => b[1].count - a[1].count).slice(0, 5);
 
-    const div = document.createElement("div");
-    div.className = "stat-user";
     let html = `
-      <h3>👤 ${name}</h3>
+      <h3>👤 Statisticile mele</h3>
       <p>Răspunsuri: <strong>${total}</strong> · Corecte: <strong>${correct}</strong> (${accuracy}%)</p>
       <p>Versete completate: <strong>${distinctVerses}</strong> · Ultima activitate: ${lastDay}</p>
     `;
     if (topMistakes.length > 0) {
-      html += `<p class="stat-label">Unde s-a greșit:</p><ul>`;
+      html += `<p class="stat-label">Unde am greșit:</p><ul>`;
       for (const [ref, m] of topMistakes) {
         const wrongList = [...m.wrong].map((w) => `„${w}”`).join(", ");
         const label = m.count === 1 ? "greșeală" : "greșeli";
@@ -323,9 +360,9 @@ function renderStatsContent(wrap, events) {
     } else {
       html += `<p class="stat-label">Nicio greșeală — felicitări! 🎉</p>`;
     }
-    div.innerHTML = html;
-    wrap.appendChild(div);
+    mine.innerHTML = html;
   }
+  wrap.appendChild(mine);
 }
 
 /* --- Confetti simplu pe canvas, fără dependențe --- */
