@@ -79,26 +79,32 @@ main {
   font-size: 0.9rem;
 }
 
+.verses-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .card {
   background: var(--card);
   border-radius: 18px;
-  padding: 24px 20px;
+  padding: 18px 18px;
   box-shadow: 0 4px 18px rgba(43, 36, 55, 0.08);
 }
 
 .ref {
   font-family: system-ui, sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--accent);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .verse {
-  font-size: 1.3rem;
-  line-height: 2.1;
+  font-size: 1.1rem;
+  line-height: 1.9;
   margin: 0;
 }
 

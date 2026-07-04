@@ -1,30 +1,31 @@
-/* Citim împreună — logică joc: completează cuvintele lipsă din verset. */
+/* Citim împreună — logică joc: completează cuvântul lipsă din fiecare verset, 5 pe pagină. */
 
-const POINTS_PER_BLANK = 10;
-const CLEAN_BONUS = 5;
+const PAGE_SIZE = 5;
+const POINTS_PER_VERSE = 10;
+const PAGE_CLEAN_BONUS = 20;
 const CHEERS = ["Bravo!", "Excelent!", "Minunat!", "Felicitări!", "Super!"];
 const STORAGE_SCORE = "ci_score";
 const STORAGE_PROGRESS = "ci_progress";
+
+const totalPages = Math.ceil(VERSES.length / PAGE_SIZE);
 
 const el = {
   score: document.getElementById("score"),
   scoreChip: document.getElementById("score-chip"),
   progress: document.getElementById("progress"),
-  card: document.getElementById("card"),
-  ref: document.getElementById("ref"),
-  verse: document.getElementById("verse"),
+  container: document.getElementById("verses-container"),
   cheer: document.getElementById("cheer"),
   checkBtn: document.getElementById("check-btn"),
   nextBtn: document.getElementById("next-btn"),
 };
 
 let score = parseInt(localStorage.getItem(STORAGE_SCORE), 10) || 0;
-let current = parseInt(localStorage.getItem(STORAGE_PROGRESS), 10) || 0;
+let page = parseInt(localStorage.getItem(STORAGE_PROGRESS), 10) || 0;
 let hadMistake = false;
 
 function save() {
   localStorage.setItem(STORAGE_SCORE, String(score));
-  localStorage.setItem(STORAGE_PROGRESS, String(current));
+  localStorage.setItem(STORAGE_PROGRESS, String(page));
 }
 
 function shuffle(arr) {
@@ -44,24 +45,23 @@ function updateScore(points) {
   save();
 }
 
-function renderVerse() {
-  const v = VERSES[current];
-  hadMistake = false;
+function buildVerseCard(v) {
+  const card = document.createElement("section");
+  card.className = "card";
 
-  el.progress.textContent = `Versetul ${current + 1} din ${VERSES.length}`;
-  el.ref.textContent = v.ref;
-  el.cheer.hidden = true;
-  el.cheer.innerHTML = "";
-  el.checkBtn.hidden = false;
-  el.nextBtn.hidden = true;
+  const ref = document.createElement("div");
+  ref.className = "ref";
+  ref.textContent = v.ref;
+  card.appendChild(ref);
 
-  // Împarte textul pe marcajele {n} și inserează dropdown-uri.
-  el.verse.innerHTML = "";
+  const verse = document.createElement("p");
+  verse.className = "verse";
+
   const parts = v.text.split(/(\{\d+\})/);
   for (const part of parts) {
     const m = part.match(/^\{(\d+)\}$/);
     if (!m) {
-      el.verse.appendChild(document.createTextNode(part));
+      verse.appendChild(document.createTextNode(part));
       continue;
     }
     const blank = v.blanks[Number(m[1])];
@@ -83,12 +83,32 @@ function renderVerse() {
       select.appendChild(opt);
     }
     select.addEventListener("change", () => select.classList.remove("wrong"));
-    el.verse.appendChild(select);
+    verse.appendChild(select);
+  }
+  card.appendChild(verse);
+  return card;
+}
+
+function renderPage() {
+  hadMistake = false;
+
+  const start = page * PAGE_SIZE;
+  const pageVerses = VERSES.slice(start, start + PAGE_SIZE);
+
+  el.progress.textContent = `Pagina ${page + 1} din ${totalPages}`;
+  el.cheer.hidden = true;
+  el.cheer.innerHTML = "";
+  el.checkBtn.hidden = false;
+  el.nextBtn.hidden = true;
+
+  el.container.innerHTML = "";
+  for (const v of pageVerses) {
+    el.container.appendChild(buildVerseCard(v));
   }
 }
 
 function checkAnswers() {
-  const selects = [...el.verse.querySelectorAll("select.blank")];
+  const selects = [...el.container.querySelectorAll("select.blank")];
   if (selects.some((s) => s.value === "")) {
     selects.filter((s) => s.value === "").forEach((s) => flashWrong(s, false));
     return;
@@ -101,7 +121,7 @@ function checkAnswers() {
       span.className = "locked";
       span.textContent = s.dataset.answer;
       s.replaceWith(span);
-      earned += POINTS_PER_BLANK;
+      earned += POINTS_PER_VERSE;
     } else {
       hadMistake = true;
       flashWrong(s, true);
@@ -109,10 +129,10 @@ function checkAnswers() {
   }
   if (earned > 0) updateScore(earned);
 
-  if (!el.verse.querySelector("select.blank")) {
+  if (!el.container.querySelector("select.blank")) {
     let bonus = 0;
     if (!hadMistake) {
-      bonus = CLEAN_BONUS;
+      bonus = PAGE_CLEAN_BONUS;
       updateScore(bonus);
     }
     celebrate(bonus);
@@ -130,11 +150,11 @@ function flashWrong(select, reset) {
 function celebrate(bonus) {
   const msg = CHEERS[Math.floor(Math.random() * CHEERS.length)];
   const bonusText = bonus > 0 ? ` (+${bonus} bonus fără greșeli!)` : "";
-  el.cheer.innerHTML = `<div class="big">🎉 ${msg}</div><div class="points">Verset completat${bonusText}</div>`;
+  el.cheer.innerHTML = `<div class="big">🎉 ${msg}</div><div class="points">Pagină completată${bonusText}</div>`;
   el.cheer.hidden = false;
   el.checkBtn.hidden = true;
 
-  if (current + 1 < VERSES.length) {
+  if (page + 1 < totalPages) {
     el.nextBtn.hidden = false;
   } else {
     el.nextBtn.hidden = true;
@@ -143,22 +163,21 @@ function celebrate(bonus) {
   launchConfetti();
 }
 
-function nextVerse() {
-  current += 1;
+function nextPage() {
+  page += 1;
   save();
-  renderVerse();
+  renderPage();
 }
 
 function showFinal() {
   el.progress.textContent = "";
-  el.ref.textContent = "";
   el.cheer.hidden = true;
   el.checkBtn.hidden = true;
   el.nextBtn.hidden = true;
-  el.verse.innerHTML = "";
+  el.container.innerHTML = "";
 
   const div = document.createElement("div");
-  div.className = "final";
+  div.className = "final card";
   div.innerHTML = `
     <div class="trophy">🏆</div>
     <h2>Ai terminat toate versetele!</h2>
@@ -169,12 +188,12 @@ function showFinal() {
   restart.style.marginTop = "16px";
   restart.textContent = "Reia de la început";
   restart.addEventListener("click", () => {
-    current = 0;
+    page = 0;
     save();
-    renderVerse();
+    renderPage();
   });
   div.appendChild(restart);
-  el.verse.appendChild(div);
+  el.container.appendChild(div);
 }
 
 /* --- Confetti simplu pe canvas, fără dependențe --- */
@@ -223,11 +242,11 @@ function launchConfetti() {
 
 /* --- Inițializare --- */
 el.checkBtn.addEventListener("click", checkAnswers);
-el.nextBtn.addEventListener("click", nextVerse);
+el.nextBtn.addEventListener("click", nextPage);
 
 el.score.textContent = score;
-if (current >= VERSES.length) current = 0;
-renderVerse();
+if (page >= totalPages) page = 0;
+renderPage();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
