@@ -1,9 +1,11 @@
-const CACHE = "citim-impreuna-v2";
+const CACHE = "citim-impreuna-v3";
 const ASSETS = [
   ".",
   "index.html",
   "css/style.css",
   "js/app.js",
+  "js/config.js",
+  "js/tracker.js",
   "js/verses.js",
   "manifest.webmanifest",
   "icons/icon.svg",
@@ -26,6 +28,11 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // Doar fișierele proprii (GET); apelurile către Supabase trec neatinse
+  // (cache.put nu acceptă POST, iar statisticile nu trebuie servite din cache).
+  if (event.request.method !== "GET" || !event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
   // Rețea întâi, ca actualizările să apară imediat; recurge la cache doar offline.
   event.respondWith(
     fetch(event.request)

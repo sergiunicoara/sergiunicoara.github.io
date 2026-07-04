@@ -32,12 +32,18 @@ body {
 
 header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  padding-top: calc(14px + env(safe-area-inset-top));
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 18px;
+  padding-top: calc(12px + env(safe-area-inset-top));
   background: var(--accent);
   color: #fff;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 header h1 {
@@ -45,6 +51,30 @@ header h1 {
   margin: 0;
   font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.header-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-chip,
+.icon-btn {
+  background: rgba(255, 255, 255, 0.16);
+  border: none;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+  cursor: pointer;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .score-chip {
@@ -224,6 +254,84 @@ select.blank.wrong {
 .final p {
   color: var(--muted);
   margin: 4px 0 0;
+}
+
+/* Modal nume utilizator */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 36, 55, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  padding: 24px;
+}
+
+.modal {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 26px 22px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: system-ui, sans-serif;
+}
+
+.modal h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.modal input {
+  font-family: system-ui, sans-serif;
+  font-size: 1.1rem;
+  padding: 12px 14px;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  outline: none;
+  text-align: center;
+}
+
+/* Ecran statistici */
+.stats {
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+}
+
+.stat-user {
+  padding: 10px 0;
+}
+
+.stat-user + .stat-user {
+  border-top: 1px solid #eee6da;
+}
+
+.stat-user h3 {
+  margin: 0 0 6px;
+  color: var(--accent);
+}
+
+.stat-user p {
+  margin: 3px 0;
+}
+
+.stat-label {
+  margin-top: 8px !important;
+  font-weight: 700;
+}
+
+.stat-user ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.stat-user li {
+  margin-bottom: 4px;
+  line-height: 1.5;
 }
 
 #confetti {

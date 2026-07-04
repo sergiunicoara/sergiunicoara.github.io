@@ -6,6 +6,7 @@ const PAGE_CLEAN_BONUS = 20;
 const CHEERS = ["Bravo!", "Excelent!", "Minunat!", "Felicitări!", "Super!"];
 const STORAGE_SCORE = "ci_score";
 const STORAGE_PROGRESS = "ci_progress";
+const STORAGE_USER = "ci_user";
 
 const totalPages = Math.ceil(VERSES.length / PAGE_SIZE);
 
@@ -17,10 +18,17 @@ const el = {
   cheer: document.getElementById("cheer"),
   checkBtn: document.getElementById("check-btn"),
   nextBtn: document.getElementById("next-btn"),
+  userChip: document.getElementById("user-chip"),
+  userName: document.getElementById("user-name"),
+  statsBtn: document.getElementById("stats-btn"),
+  nameModal: document.getElementById("name-modal"),
+  nameInput: document.getElementById("name-input"),
+  nameSave: document.getElementById("name-save"),
 };
 
 let score = parseInt(localStorage.getItem(STORAGE_SCORE), 10) || 0;
 let page = parseInt(localStorage.getItem(STORAGE_PROGRESS), 10) || 0;
+let userName = localStorage.getItem(STORAGE_USER) || "";
 let hadMistake = false;
 
 function save() {
@@ -68,6 +76,7 @@ function buildVerseCard(v) {
     const select = document.createElement("select");
     select.className = "blank";
     select.dataset.answer = blank.answer;
+    select.dataset.ref = v.ref;
 
     const placeholder = document.createElement("option");
     placeholder.value = "";
@@ -116,6 +125,13 @@ function checkAnswers() {
 
   let earned = 0;
   for (const s of selects) {
+    Tracker.log({
+      user_name: userName || "necunoscut",
+      verse_ref: s.dataset.ref,
+      answer: s.dataset.answer,
+      chosen: s.value,
+      correct: s.value === s.dataset.answer,
+    });
     if (s.value === s.dataset.answer) {
       const span = document.createElement("span");
       span.className = "locked";
@@ -127,6 +143,7 @@ function checkAnswers() {
       flashWrong(s, true);
     }
   }
+  Tracker.flush();
   if (earned > 0) updateScore(earned);
 
   if (!el.container.querySelector("select.blank")) {
@@ -199,6 +216,118 @@ function showFinal() {
   el.container.appendChild(div);
 }
 
+/* --- Utilizator: nume salvat local, schimbabil prin tap pe chip --- */
+function updateUserChip() {
+  el.userName.textContent = userName || "…";
+}
+
+function showNameModal() {
+  el.nameInput.value = userName;
+  el.nameModal.hidden = false;
+  el.nameInput.focus();
+}
+
+function saveName() {
+  const name = el.nameInput.value.trim();
+  if (!name) return;
+  userName = name;
+  localStorage.setItem(STORAGE_USER, userName);
+  el.nameModal.hidden = true;
+  updateUserChip();
+}
+
+/* --- Ecran de statistici (agregate din evenimentele Supabase) --- */
+async function renderStats() {
+  el.progress.textContent = "Statistici";
+  el.cheer.hidden = true;
+  el.checkBtn.hidden = true;
+  el.nextBtn.hidden = true;
+  el.container.innerHTML = "";
+
+  const wrap = document.createElement("section");
+  wrap.className = "card stats";
+  el.container.appendChild(wrap);
+
+  const back = document.createElement("button");
+  back.className = "btn secondary";
+  back.textContent = "← Înapoi la citire";
+  back.addEventListener("click", renderPage);
+  el.container.appendChild(back);
+
+  if (!Tracker.enabled) {
+    wrap.innerHTML = "<p>Statisticile nu sunt configurate încă.</p>";
+    return;
+  }
+
+  wrap.innerHTML = "<p>Se încarcă…</p>";
+  try {
+    const events = await Tracker.fetchAll();
+    if (events.length === 0) {
+      wrap.innerHTML = "<p>Nicio activitate înregistrată încă.</p>";
+    } else {
+      renderStatsContent(wrap, events);
+    }
+  } catch {
+    wrap.innerHTML = "<p>Statisticile au nevoie de internet. Încearcă din nou mai târziu.</p>";
+  }
+}
+
+function renderStatsContent(wrap, events) {
+  const byUser = new Map();
+  for (const e of events) {
+    if (!byUser.has(e.user_name)) byUser.set(e.user_name, []);
+    byUser.get(e.user_name).push(e);
+  }
+
+  wrap.innerHTML = "";
+  for (const [name, evts] of byUser) {
+    const total = evts.length;
+    const correct = evts.filter((e) => e.correct).length;
+    const accuracy = Math.round((correct / total) * 100);
+    const distinctVerses = new Set(evts.filter((e) => e.correct).map((e) => e.verse_ref)).size;
+    const lastDay = new Date(evts[0].created_at).toLocaleDateString("ro-RO", {
+      day: "numeric",
+      month: "short",
+    });
+
+    // greșeli grupate pe verset, cu cuvintele alese greșit
+    const mistakes = new Map();
+    for (const e of evts) {
+      if (e.correct) continue;
+      if (!mistakes.has(e.verse_ref)) {
+        mistakes.set(e.verse_ref, { count: 0, wrong: new Set(), answer: e.answer });
+      }
+      const m = mistakes.get(e.verse_ref);
+      m.count += 1;
+      m.wrong.add(e.chosen);
+    }
+    const topMistakes = [...mistakes.entries()]
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 5);
+
+    const div = document.createElement("div");
+    div.className = "stat-user";
+    let html = `
+      <h3>👤 ${name}</h3>
+      <p>Răspunsuri: <strong>${total}</strong> · Corecte: <strong>${correct}</strong> (${accuracy}%)</p>
+      <p>Versete completate: <strong>${distinctVerses}</strong> · Ultima activitate: ${lastDay}</p>
+    `;
+    if (topMistakes.length > 0) {
+      html += `<p class="stat-label">Unde s-a greșit:</p><ul>`;
+      for (const [ref, m] of topMistakes) {
+        const wrongList = [...m.wrong].map((w) => `„${w}”`).join(", ");
+        const label = m.count === 1 ? "greșeală" : "greșeli";
+        html += `<li><strong>${ref}</strong> — ${m.count} ${label}: ${wrongList} → corect: „${m.answer}”</li>`;
+      }
+      html += `</ul>`;
+    } else {
+      html += `<p class="stat-label">Nicio greșeală — felicitări! 🎉</p>`;
+    }
+    div.innerHTML = html;
+    wrap.appendChild(div);
+  }
+}
+
 /* --- Confetti simplu pe canvas, fără dependențe --- */
 function launchConfetti() {
   const canvas = document.getElementById("confetti");
@@ -246,10 +375,19 @@ function launchConfetti() {
 /* --- Inițializare --- */
 el.checkBtn.addEventListener("click", checkAnswers);
 el.nextBtn.addEventListener("click", nextPage);
+el.userChip.addEventListener("click", showNameModal);
+el.nameSave.addEventListener("click", saveName);
+el.nameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveName();
+});
+el.statsBtn.addEventListener("click", renderStats);
 
 el.score.textContent = score;
+updateUserChip();
+if (!userName) showNameModal();
 if (page >= totalPages) page = 0;
 renderPage();
+Tracker.flush();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
