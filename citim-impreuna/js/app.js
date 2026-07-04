@@ -170,6 +170,9 @@ function nextPage() {
 }
 
 function showFinal() {
+  page = 0;
+  save();
+
   el.progress.textContent = "";
   el.cheer.hidden = true;
   el.checkBtn.hidden = true;
