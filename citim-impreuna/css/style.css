@@ -300,6 +300,14 @@ select.blank.wrong {
   text-align: center;
 }
 
+.name-warning {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--bad);
+  text-align: center;
+}
+
 /* Ecran statistici */
 .stats {
   font-family: system-ui, sans-serif;
@@ -393,9 +401,13 @@ select.blank.wrong {
 }
 
 .copyright-footer p {
-  margin: 0 auto;
+  margin: 0 auto 8px;
   max-width: 640px;
   font-size: 11px;
   line-height: 1.5;
   color: var(--muted);
+}
+
+.copyright-footer p:last-child {
+  margin-bottom: 0;
 }

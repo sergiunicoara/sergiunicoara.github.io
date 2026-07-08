@@ -24,6 +24,7 @@ const el = {
   nameModal: document.getElementById("name-modal"),
   nameInput: document.getElementById("name-input"),
   nameSave: document.getElementById("name-save"),
+  nameWarning: document.getElementById("name-warning"),
 };
 
 let score = parseInt(localStorage.getItem(STORAGE_SCORE), 10) || 0;
@@ -224,15 +225,35 @@ function updateUserChip() {
 function showNameModal() {
   el.nameInput.value = userName;
   el.nameModal.hidden = false;
+  el.nameWarning.hidden = true;
   el.nameInput.focus();
 }
 
-function saveName() {
+async function nameTakenByOther(name) {
+  if (!Tracker.enabled) return false;
+  try {
+    const events = await Tracker.fetchAll();
+    const lower = name.toLowerCase();
+    return events.some((e) => (e.user_name || "").toLowerCase() === lower) && lower !== userName.toLowerCase();
+  } catch {
+    return false; // fără internet — nu blocăm jocul pentru o verificare opțională
+  }
+}
+
+async function saveName() {
   const name = el.nameInput.value.trim();
   if (!name) return;
+
+  const warningAlreadyShown = !el.nameWarning.hidden;
+  if (!warningAlreadyShown && (await nameTakenByOther(name))) {
+    el.nameWarning.hidden = false;
+    return;
+  }
+
   userName = name;
   localStorage.setItem(STORAGE_USER, userName);
   el.nameModal.hidden = true;
+  el.nameWarning.hidden = true;
   updateUserChip();
 }
 
