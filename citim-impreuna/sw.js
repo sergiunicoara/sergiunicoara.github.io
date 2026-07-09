@@ -1,10 +1,11 @@
-const CACHE = "citim-impreuna-v5";
+const CACHE = "citim-impreuna-v7";
 const ASSETS = [
   ".",
   "index.html",
   "css/style.css",
   "js/app.js",
   "js/config.js",
+  "js/scenes.js",
   "js/tracker.js",
   "js/verses-1samuel.js",
   "js/verses-2samuel.js",
