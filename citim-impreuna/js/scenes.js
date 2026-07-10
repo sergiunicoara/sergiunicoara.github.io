@@ -849,9 +849,8 @@ const SceneEngine = (() => {
       prev = null;
       drawScene(cur, now, 1, 0);
     }
-    // văl fin peste tot, ca textul să rămână ușor de citit
-    ctx.fillStyle = 'rgba(246,242,234,.22)';
-    ctx.fillRect(0, 0, w, h);
+    // fără văl — scena rămâne vie și colorată; lizibilitatea o dau cardurile
+    // semi-transparente cu blur de deasupra (stil Talant).
   }
 
   function tick(now) {
