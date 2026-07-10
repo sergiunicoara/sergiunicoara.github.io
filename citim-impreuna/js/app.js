@@ -120,9 +120,11 @@ function renderPage() {
 }
 
 /* --- Fundal animat pe canvas: scenă colorată aleasă după tema paginii --- */
+let lastSceneId = null;
 function updateSceneBackground(pageVerses) {
   if (typeof pickScene !== "function" || typeof SceneEngine === "undefined") return;
-  const scene = pickScene(pageVerses, page);
+  const scene = pickScene(pageVerses, page, lastSceneId);
+  lastSceneId = scene.id;
   // oglindire pe paginile impare, ca aceeași temă să nu arate identic
   SceneEngine.show(scene, page % 2 === 1);
 }

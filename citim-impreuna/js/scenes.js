@@ -781,19 +781,40 @@ const SCENES = [
 ];
 
 /* ── alegerea scenei după pagina curentă ───────────────────── */
-function pickScene(pageVerses, pageIndex = 0) {
+// grup neutru folosit când pagina n-are niciun cuvânt-cheie tematic — rotește
+// prin câteva scene generale în loc să rămână mereu pe pergament
+const NEUTRAL_ROTATION = ['pastor', 'munte', 'apa', 'noapte', 'pergament'];
+
+function pickScene(pageVerses, pageIndex = 0, avoidId = null) {
   const text = pageVerses.map(v => v.text.replace('{0}', v.blanks[0].answer)).join(' ').toLowerCase();
-  const matches = SCENES.filter(sc => sc.keywords.length && sc.keywords.some(kw => text.includes(kw.toLowerCase())));
-  if (matches.length === 0) return SCENES[SCENES.length - 1];
+  let matches = SCENES.filter(sc => sc.keywords.length && sc.keywords.some(kw => text.includes(kw.toLowerCase())));
+
+  if (matches.length === 0) {
+    const pool = NEUTRAL_ROTATION.map(id => SCENES.find(sc => sc.id === id)).filter(Boolean);
+    const rotated = pool[pageIndex % pool.length];
+    if (rotated.id !== avoidId || pool.length === 1) return rotated;
+    return pool[(pageIndex + 1) % pool.length];
+  }
+
+  // evită să repete aceeași scenă ca pagina anterioară dacă mai există altă opțiune
+  if (avoidId && matches.length > 1) {
+    const filtered = matches.filter(sc => sc.id !== avoidId);
+    if (filtered.length > 0) matches = filtered;
+  }
   return matches[pageIndex % matches.length];
 }
 
-/* ── motorul de randare: un canvas, crossfade între scene ──── */
+/* ── motorul de randare: un canvas, tranziție de alunecare + fade ──── */
 const SceneEngine = (() => {
   let canvas = null, ctx = null, w = 0, h = 0;
   let cur = null, prev = null, fadeStart = 0;
-  const FADE_MS = 1100;
+  const FADE_MS = 1400;
   let mirror = false;
+  let slideDir = 1; // 1 = intră din dreapta, -1 = intră din stânga (alternează la fiecare schimbare)
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
 
   function resize() {
     if (!canvas) return;
@@ -805,9 +826,10 @@ const SceneEngine = (() => {
     if (prev) prev.state = prev.scene.init(w, h);
   }
 
-  function drawScene(entry, now, alpha) {
+  function drawScene(entry, now, alpha, offsetX) {
     ctx.save();
     ctx.globalAlpha = alpha;
+    if (offsetX) ctx.translate(offsetX, 0);
     if (mirror) { ctx.translate(w, 0); ctx.scale(-1, 1); }
     try { entry.scene.draw(ctx, w, h, now - entry.start, entry.state); } catch (e) { /* scena nu blochează aplicația */ }
     ctx.restore();
@@ -817,11 +839,15 @@ const SceneEngine = (() => {
     if (!canvas || !cur) return;
     ctx.clearRect(0, 0, w, h);
     if (prev && now - fadeStart < FADE_MS) {
-      drawScene(prev, now, 1);
-      drawScene(cur, now, (now - fadeStart) / FADE_MS);
+      const rawP = (now - fadeStart) / FADE_MS;
+      const p = easeInOutCubic(rawP);
+      // scena veche alunecă și dispare în direcția opusă intrării noii scene
+      drawScene(prev, now, 1 - p * 0.7, -slideDir * w * 0.35 * p);
+      // scena nouă intră alunecând din direcția slideDir, cu fade-in
+      drawScene(cur, now, p, slideDir * w * (1 - p) * 0.35);
     } else {
       prev = null;
-      drawScene(cur, now, 1);
+      drawScene(cur, now, 1, 0);
     }
     // văl fin peste tot, ca textul să rămână ușor de citit
     ctx.fillStyle = 'rgba(246,242,234,.22)';
@@ -848,6 +874,7 @@ const SceneEngine = (() => {
     if (!ensureCanvas()) return;
     mirror = !!mirrored;
     if (cur && cur.scene.id === scene.id) return; // aceeași temă — nu reporni
+    slideDir *= -1; // alternează direcția de alunecare la fiecare tranziție
     prev = cur;
     cur = { scene, state: scene.init(w, h), start: performance.now() };
     fadeStart = performance.now();
