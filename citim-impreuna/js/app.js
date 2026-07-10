@@ -133,6 +133,7 @@ function updateSceneBackground(pageVerses) {
   const showing = document.getElementById(`scene-bg-${activeSceneLayer}`);
   const nextLayer = activeSceneLayer === "a" ? "b" : "a";
   const hidden = document.getElementById(`scene-bg-${nextLayer}`);
+  if (!showing || !hidden) return; // index.html vechi în cache — nu bloca redarea versetelor
 
   hidden.innerHTML = scene.svg;
   // variație per pagină: oglindire pe paginile impare, ca aceeași temă
