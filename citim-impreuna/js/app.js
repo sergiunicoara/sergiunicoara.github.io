@@ -25,6 +25,7 @@ const el = {
   nameInput: document.getElementById("name-input"),
   nameSave: document.getElementById("name-save"),
   nameWarning: document.getElementById("name-warning"),
+  bookTitle: document.getElementById("book-title"),
 };
 
 let score = parseInt(localStorage.getItem(STORAGE_SCORE), 10) || 0;
@@ -106,6 +107,8 @@ function renderPage() {
   const pageVerses = VERSES.slice(start, start + PAGE_SIZE);
 
   el.progress.textContent = `Pagina ${page + 1} din ${totalPages}`;
+  const firstRef = pageVerses[0]?.ref || "";
+  el.bookTitle.textContent = firstRef.includes("2 Samuel") ? "Cartea 2 Samuel" : "Cartea 1 Samuel";
   el.cheer.hidden = true;
   el.cheer.innerHTML = "";
   el.checkBtn.hidden = false;
