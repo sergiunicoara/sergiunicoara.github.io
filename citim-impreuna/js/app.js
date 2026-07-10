@@ -119,30 +119,12 @@ function renderPage() {
   updateSceneBackground(pageVerses);
 }
 
-/* --- Fundal decorativ: scenă SVG aleasă după cuvinte-cheie din pagina curentă --- */
-let currentSceneId = null;
-let activeSceneLayer = "a";
-
+/* --- Fundal animat pe canvas: scenă colorată aleasă după tema paginii --- */
 function updateSceneBackground(pageVerses) {
-  if (typeof pickScene !== "function") return;
+  if (typeof pickScene !== "function" || typeof SceneEngine === "undefined") return;
   const scene = pickScene(pageVerses, page);
-  currentSceneId = scene.id;
-
-  // Reîmprospătează mereu (chiar dacă scena e aceeași ca la pagina anterioară)
-  // ca să existe un semnal vizual clar la fiecare schimbare de pagină.
-  const showing = document.getElementById(`scene-bg-${activeSceneLayer}`);
-  const nextLayer = activeSceneLayer === "a" ? "b" : "a";
-  const hidden = document.getElementById(`scene-bg-${nextLayer}`);
-  if (!showing || !hidden) return; // index.html vechi în cache — nu bloca redarea versetelor
-
-  hidden.innerHTML = scene.svg;
-  // variație per pagină: oglindire pe paginile impare, ca aceeași temă
-  // să nu arate identic două pagini la rând
-  const svg = hidden.querySelector("svg");
-  if (svg) svg.style.transform = page % 2 === 1 ? "scaleX(-1)" : "";
-  hidden.classList.add("visible");
-  showing.classList.remove("visible");
-  activeSceneLayer = nextLayer;
+  // oglindire pe paginile impare, ca aceeași temă să nu arate identic
+  SceneEngine.show(scene, page % 2 === 1);
 }
 
 function checkAnswers() {
