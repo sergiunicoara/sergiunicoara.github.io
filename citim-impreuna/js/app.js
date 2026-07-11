@@ -41,7 +41,6 @@ const el = {
   regError: document.getElementById("reg-error"),
   regBtn: document.getElementById("reg-btn"),
   authLogoutBtn: document.getElementById("auth-logout-btn"),
-  authCloseBtn: document.getElementById("auth-close-btn"),
 };
 
 let score = parseInt(localStorage.getItem(STORAGE_SCORE), 10) || 0;
@@ -270,6 +269,7 @@ function showAuthModal() {
 }
 
 function hideAuthModal() {
+  if (!Auth.isLoggedIn()) return;
   el.authModal.hidden = true;
 }
 
@@ -519,7 +519,6 @@ el.tabRegister?.addEventListener("click", () => switchAuthTab("register"));
 el.loginBtn?.addEventListener("click", handleLogin);
 el.regBtn?.addEventListener("click", handleRegister);
 el.authLogoutBtn?.addEventListener("click", handleLogout);
-el.authCloseBtn?.addEventListener("click", hideAuthModal);
 el.loginPassword?.addEventListener("keydown", (e) => { if (e.key === "Enter") handleLogin(); });
 el.regPassword?.addEventListener("keydown", (e) => { if (e.key === "Enter") handleRegister(); });
 el.authModal?.addEventListener("click", (e) => { if (e.target === el.authModal && Auth.isLoggedIn()) hideAuthModal(); });
