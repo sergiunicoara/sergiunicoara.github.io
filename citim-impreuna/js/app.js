@@ -511,19 +511,18 @@ el.checkBtn.addEventListener("click", checkAnswers);
 el.nextBtn.addEventListener("click", nextPage);
 el.statsBtn.addEventListener("click", renderStats);
 
-// auth modal events
+// auth modal events (optional chaining = rezistență la SW care servește HTML vechi)
 el.userChip.addEventListener("click", showAuthModal);
-el.logoutBtn.addEventListener("click", handleLogout);
-el.tabLogin.addEventListener("click", () => switchAuthTab("login"));
-el.tabRegister.addEventListener("click", () => switchAuthTab("register"));
-el.loginBtn.addEventListener("click", handleLogin);
-el.regBtn.addEventListener("click", handleRegister);
-el.authLogoutBtn.addEventListener("click", handleLogout);
-el.authCloseBtn.addEventListener("click", hideAuthModal);
-el.loginPassword.addEventListener("keydown", (e) => { if (e.key === "Enter") handleLogin(); });
-el.regPassword.addEventListener("keydown", (e) => { if (e.key === "Enter") handleRegister(); });
-// close modal on backdrop click
-el.authModal.addEventListener("click", (e) => { if (e.target === el.authModal && Auth.isLoggedIn()) hideAuthModal(); });
+el.logoutBtn?.addEventListener("click", handleLogout);
+el.tabLogin?.addEventListener("click", () => switchAuthTab("login"));
+el.tabRegister?.addEventListener("click", () => switchAuthTab("register"));
+el.loginBtn?.addEventListener("click", handleLogin);
+el.regBtn?.addEventListener("click", handleRegister);
+el.authLogoutBtn?.addEventListener("click", handleLogout);
+el.authCloseBtn?.addEventListener("click", hideAuthModal);
+el.loginPassword?.addEventListener("keydown", (e) => { if (e.key === "Enter") handleLogin(); });
+el.regPassword?.addEventListener("keydown", (e) => { if (e.key === "Enter") handleRegister(); });
+el.authModal?.addEventListener("click", (e) => { if (e.target === el.authModal && Auth.isLoggedIn()) hideAuthModal(); });
 
 el.score.textContent = score;
 if (page >= totalPages) page = 0;
