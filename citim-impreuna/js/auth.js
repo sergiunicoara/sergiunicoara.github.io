@@ -7,7 +7,7 @@
 */
 
 const Auth = (() => {
-  const DOMAIN = '@citimapp.ro';
+  const DOMAIN = '@test.com';
   let _client = null;
   let _session = null;
   let _onChangeCb = null;
