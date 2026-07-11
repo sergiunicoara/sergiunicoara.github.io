@@ -67,23 +67,12 @@
 
       <!-- Stare: neconectat — tabs login / register -->
       <div id="auth-form">
-        <div class="auth-tabs">
-          <button class="auth-tab active" id="tab-login">Intră în cont</button>
-          <button class="auth-tab" id="tab-register">Cont nou</button>
-        </div>
-
         <div id="auth-login-panel">
+          <p style="margin:0 0 4px;font-family:system-ui,sans-serif;font-size:0.95rem;font-weight:700;text-align:center;color:var(--ink)">Intră în cont</p>
           <input id="login-username" type="text" maxlength="30" placeholder="Nume utilizator" autocomplete="username" />
           <input id="login-password" type="password" maxlength="50" placeholder="Parolă" autocomplete="current-password" />
           <p class="auth-error" id="login-error" hidden></p>
           <button class="btn primary" id="login-btn">Intră</button>
-        </div>
-
-        <div id="auth-register-panel" hidden>
-          <input id="reg-username" type="text" maxlength="30" placeholder="Alege un nume utilizator" autocomplete="username" />
-          <input id="reg-password" type="password" maxlength="50" placeholder="Parolă (min. 6 caractere)" autocomplete="new-password" />
-          <p class="auth-error" id="reg-error" hidden></p>
-          <button class="btn primary" id="reg-btn">Creează cont</button>
         </div>
       </div>
 
