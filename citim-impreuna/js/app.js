@@ -529,14 +529,18 @@ if (page >= totalPages) page = 0;
 renderPage();
 Tracker.flush();
 
-// inițializare autentificare
+// Arătăm modalul imediat — nu așteptăm Supabase (poate fi lent/offline).
+// Dacă sesiunea se restaurează, onAuthStateChange ascunde modalul automat.
+showAuthModal();
+
 Auth.init((user) => {
   userName = user || "";
   updateUserChip();
+  if (user) hideAuthModal();
 }).then((user) => {
   userName = user || "";
   updateUserChip();
-  if (!user) showAuthModal();
+  if (user) hideAuthModal();
 });
 
 if ("serviceWorker" in navigator) {
