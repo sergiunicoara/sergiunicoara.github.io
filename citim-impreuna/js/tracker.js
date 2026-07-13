@@ -82,6 +82,25 @@ const Tracker = (() => {
     return res.json();
   }
 
+  async function fetchUserEvents(userName) {
+    if (!enabled || !userName) return [];
+    // ilike fără wildcards = egalitate case-insensitive (prinde și numele
+    // vechi salvate cu literă mică, ex. "sergiu" vs "Sergiu").
+    const url =
+      `${SUPABASE_URL}/rest/v1/events` +
+      `?select=verse_ref,correct,created_at` +
+      `&user_name=ilike.${encodeURIComponent(userName)}` +
+      `&order=created_at.desc&limit=5000`;
+    const res = await fetch(url, {
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
   const DEFAULT_LEADERBOARD_SIZE = 5;
 
   async function fetchConfig() {
@@ -107,5 +126,5 @@ const Tracker = (() => {
 
   window.addEventListener("online", flush);
 
-  return { enabled, log, flush, fetchAll, fetchConfig };
+  return { enabled, log, flush, fetchAll, fetchUserEvents, fetchConfig };
 })();
