@@ -382,14 +382,6 @@ async function syncScoreFromServer({ announceStreak = false, localScoreBefore = 
   if (announceStreak && streakBonus >= 2000) showStreakMessage();
 }
 
-// Supabase recalculează scorul din evenimentele înregistrate și poate adăuga
-// bonusuri de consecvență care nu există în starea locală.
-async function pushScore() {
-  if (!Tracker.enabled || !userName) return;
-  await Tracker.refreshScore();
-  await syncScoreFromServer();
-}
-
 async function refreshAndSyncScore() {
   if (!Tracker.enabled || !userName) return;
   await Tracker.flush();
@@ -722,16 +714,13 @@ async function handleLogin() {
     hideAuthModal();
     updateUserChip();
     el.loginPassword.value = "";
-    guardAgainstAccountSwitch();
-    progressSynced = false;
-    await refreshAndSyncScore();
-    await syncProgressFromCloud();
+    await syncSessionFromCloud();
     showWelcomeMessage(userName);
   } catch (err) {
     setAuthError(el.loginError, err.message);
   } finally {
     el.loginBtn.disabled = false;
-    el.loginBtn.textContent = "Intră";
+    el.loginBtn.textContent = "Intră în cont";
   }
 }
 
@@ -746,10 +735,7 @@ async function handleRegister() {
     hideAuthModal();
     updateUserChip();
     el.loginPassword.value = "";
-    guardAgainstAccountSwitch();
-    progressSynced = false;
-    await refreshAndSyncScore();
-    await syncProgressFromCloud();
+    await syncSessionFromCloud();
     showWelcomeMessage(userName);
   } catch (err) {
     setAuthError(el.loginError, err.message);
@@ -822,7 +808,9 @@ function pageHadMistakeBeforeCompletion(events, targetPage, curCycle) {
   return false;
 }
 
-// Rulează o singură dată la logare — aduce progresul de pe orice dispozitiv.
+// Aduce progresul de pe orice dispozitiv. Nu rulează dacă o cerere e deja în
+// curs (progressSynced=true) — syncSessionFromCloud, mai jos, controlează
+// când și de câte ori se reîncearcă.
 let progressSynced = false;
 async function syncProgressFromCloud() {
   if (progressSynced || !Tracker.enabled || !userName) return;
@@ -861,6 +849,23 @@ async function syncProgressFromCloud() {
   } catch {
     // offline sau eroare — rămâne scorul/progresul local, se reîncearcă la login
     progressSynced = false;
+  }
+}
+
+// Sincronizarea completă (scor + pagină) pentru începutul unei sesiuni — login,
+// înregistrare, restaurare de sesiune la reîncărcare, sau revenirea pe tab.
+// syncProgressFromCloud() lasă progressSynced=true doar dacă a reușit efectiv
+// (vezi try/catch de mai jos), deci reîncercăm de câteva ori la eșec — altfel
+// un singur blip de rețea chiar în momentul intrării lasă pagina blocată pe
+// starea locală veche, nesincronizată cu ce s-a citit pe alt dispozitiv.
+async function syncSessionFromCloud() {
+  guardAgainstAccountSwitch();
+  await refreshAndSyncScore();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    progressSynced = false;
+    await syncProgressFromCloud();
+    if (progressSynced) return;
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
 }
 
@@ -909,61 +914,12 @@ async function renderStats() {
   }
 }
 
-// Reface exact regulile de punctaj din joc (checkAnswers/celebrate), pornind
-// doar din evenimentele brute — nu există un tabel separat de scor.
-function computePointsForUser(userEvents) {
-  const cycleOf = (e) => (e.cycle == null ? 0 : e.cycle);
-
-  // Punct de bază: fiecare verset corect contează o dată PER CICLU. Reluarea
-  // aceleiași pagini în același ciclu nu mai adaugă puncte; abia după ce termină
-  // toată cartea (ciclu nou) versetele reluate aduc din nou puncte.
-  const seen = new Set(); // "ciclu|verset"
-  for (const e of userEvents) {
-    if (e.correct) seen.add(cycleOf(e) + "|" + e.verse_ref);
-  }
-  let points = seen.size * POINTS_PER_VERSE;
-
-  // Bonus de pagină curată — o dată PER (pagină, ciclu), pe baza primei terminări
-  // curate din acel ciclu (fără nicio greșeală înainte de finalizare). Complet
-  // monoton: o greșeală de mai târziu nu mai poate anula bonusul.
-  //
-  // O singură trecere prin evenimente ca să le grupăm pe (pagină → ciclu),
-  // în loc să reparcurgem toate paginile cărții pentru fiecare utilizator
-  // (altfel devine O(utilizatori × pagini × evenimente) la corpusul complet).
-  const byPage = new Map(); // pagină → (ciclu → evenimente)
-  for (const e of userEvents) {
-    const p = REF_PAGE.get(e.verse_ref);
-    if (p == null) continue;
-    if (!byPage.has(p)) byPage.set(p, new Map());
-    const byCycle = byPage.get(p);
-    const c = cycleOf(e);
-    if (!byCycle.has(c)) byCycle.set(c, []);
-    byCycle.get(c).push(e);
-  }
-
-  for (const [p, byCycle] of byPage) {
-    const pageRefs = VERSES.slice(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE).map((v) => v.ref);
-
-    for (const cycleEvents of byCycle.values()) {
-      const sorted = [...cycleEvents].sort((a, b) =>
-        (a.created_at || "").localeCompare(b.created_at || "")
-      );
-      const solved = new Set();
-      let mistakeBeforeDone = false;
-      let done = false;
-      for (const e of sorted) {
-        if (e.correct) solved.add(e.verse_ref);
-        else if (!done) mistakeBeforeDone = true;
-        if (pageRefs.every((ref) => solved.has(ref))) { done = true; break; }
-      }
-      if (done && !mistakeBeforeDone) points += PAGE_CLEAN_BONUS;
-    }
-  }
-  return points;
-}
-
-function normName(n) {
-  return (n || '').replace(/\b\w/g, c => c.toUpperCase());
+// Numele din clasament trece prin același normalizator ca la înregistrare,
+// ca varianta veche scrisă cu literă mică să arate la fel. Implementarea
+// locală anterioară folosea /\w/ — doar ASCII, deci „Ștefan” devenea „ȘTefan”.
+function displayName(n) {
+  if (typeof Auth !== "undefined" && Auth.normalizeUsername) return Auth.normalizeUsername(n);
+  return String(n || "");
 }
 
 function escapeHtml(value) {
@@ -976,39 +932,8 @@ function escapeHtml(value) {
   }[char]));
 }
 
-function groupByUser(events) {
-  const byUser = new Map();
-  for (const e of events) {
-    const name = normName(e.user_name);
-    if (!byUser.has(name)) byUser.set(name, []);
-    byUser.get(name).push(e);
-  }
-  return byUser;
-}
-
-function renderStatsContent(wrap, events, leaderboardSize) {
-  const byUser = groupByUser(events);
-  const ranking = [...byUser.entries()]
-    .map(([name, evts]) => ({ name, points: computePointsForUser(evts) }))
-    .sort((a, b) => b.points - a.points);
-
-  wrap.innerHTML = "";
-
-  const board = document.createElement("div");
-  board.className = "leaderboard";
-  board.innerHTML = "<h3>🏆 Clasament</h3>";
-  ranking.filter((entry) => entry.points > 0).forEach((entry, i) => {
-    const row = document.createElement("div");
-    row.className = "leaderboard-row" + (entry.name === userName ? " me" : "");
-    row.innerHTML = `<span class="rank">${i + 1}</span><span class="who">${escapeHtml(entry.name)}</span><span class="pts">${entry.points} pct</span>`;
-    board.appendChild(row);
-  });
-  wrap.appendChild(board);
-  wrap.appendChild(buildMyStatsPanel(byUser.get(userName)));
-}
-
 // Clasament din tabelul agregat `scores` (un rând/utilizator) + panoul personal
-// din evenimentele proprii. Calea implicită; renderStatsContent rămâne fallback.
+// din evenimentele proprii — singura cale de randare a statisticilor.
 function renderStatsFromScores(wrap, scores, myEvents) {
   // Fiecare rând din `scores` e deja unic per user_id (upsert în
   // recalculate_score_for_user) — nu se mai fuzionează după nume normalizat,
@@ -1016,7 +941,7 @@ function renderStatsFromScores(wrap, scores, myEvents) {
   // afișat (ex. sergiu@citim.app și sergiu@test.com, ambele "Sergiu").
   const myUserId = typeof Auth !== "undefined" && Auth.getUserId ? Auth.getUserId() : null;
   const ranking = scores
-    .map((s) => ({ userId: s.user_id || null, name: normName(s.user_name), points: s.points || 0 }))
+    .map((s) => ({ userId: s.user_id || null, name: displayName(s.user_name), points: s.points || 0 }))
     .sort((a, b) => b.points - a.points);
 
   wrap.innerHTML = "";
@@ -1351,10 +1276,14 @@ if (page >= totalPages) page = 0;
 renderPage();
 Tracker.flush();
 
-// Daca scorul a fost actualizat pe alt dispozitiv sau corectat de administrator,
-// afiseaza totalul curent imediat ce utilizatorul revine in aplicatie.
+// Daca scorul sau pagina au fost actualizate pe alt dispozitiv, aduce-le la zi
+// imediat ce utilizatorul revine in aplicatie — nu doar la login/reload. Fara
+// asta, scorul se resincroniza la revenirea pe tab dar pagina ramanea inghetata
+// la ce era local (syncProgressFromCloud rula o singura data per incarcare de
+// pagina), asa ca cele doua puteau ajunge sa arate stari diferite.
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) refreshAndSyncScore();
+  if (document.hidden || !userName) return;
+  syncSessionFromCloud();
 });
 
 // Arătăm modalul imediat — nu așteptăm Supabase (poate fi lent/offline).
@@ -1370,9 +1299,7 @@ Auth.init((user) => {
   updateUserChip();
   if (user) {
     hideAuthModal();
-    guardAgainstAccountSwitch();
-    await refreshAndSyncScore();
-    await syncProgressFromCloud();
+    await syncSessionFromCloud();
     showWelcomeMessage(userName);
   }
 });
