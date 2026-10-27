@@ -52,6 +52,8 @@ const el = {
   score: document.getElementById("score"),
   scoreChip: document.getElementById("score-chip"),
   progress: document.getElementById("progress"),
+  streakStars: document.getElementById("streak-stars"),
+  streakCaption: document.getElementById("streak-caption"),
   container: document.getElementById("verses-container"),
   cheer: document.getElementById("cheer"),
   checkBtn: document.getElementById("check-btn"),
@@ -91,6 +93,8 @@ let page = parseInt(localStorage.getItem(STORAGE_PROGRESS), 10) || 0;
 // reluarea unei pagini în același ciclu nu mai adaugă puncte.
 let cycle = parseInt(localStorage.getItem(STORAGE_CYCLE), 10) || 0;
 let userName = "";
+let readingStreakDays = null;
+let streakFetchPromise = null;
 let hadMistake = false;
 let reminderTimer = null;
 let serviceWorkerRegistration = null;
@@ -390,6 +394,109 @@ async function refreshAndSyncScore() {
   await syncScoreFromServer();
 }
 
+function readingDayNumber(timestamp) {
+  const date = new Date(timestamp);
+  if (!Number.isFinite(date.getTime())) return null;
+  const parts = new Intl.DateTimeFormat("en-US-u-ca-gregory", {
+    timeZone: "Europe/Bucharest", year: "numeric", month: "numeric", day: "numeric",
+    hour: "numeric", hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type) => Number(parts.find((part) => part.type === type)?.value);
+  // Folosim ora locală pentru a păstra pragul 03:00 inclusiv la schimbarea DST.
+  const localDay = Date.UTC(get("year"), get("month") - 1, get("day")) / 86400000;
+  return localDay - (get("hour") < 3 ? 1 : 0);
+}
+
+// Refolosește criteriul serverului: un capitol are toate versetele corecte
+// în aceeași zi de citire (03:00–02:59, Europe/Bucharest).
+function calculateReadingStreak(events, baselineAt) {
+  const baseline = baselineAt ? Date.parse(baselineAt) : 0;
+  const chaptersByDay = new Map();
+  for (const event of events) {
+    if (!event.correct || !event.chapter_ref || !event.chapter_size) continue;
+    const recorded = Date.parse(event.recorded_at);
+    if (!Number.isFinite(recorded) || recorded <= baseline) continue;
+    const day = readingDayNumber(recorded);
+    if (day == null) continue;
+    if (!chaptersByDay.has(day)) chaptersByDay.set(day, new Map());
+    const chapters = chaptersByDay.get(day);
+    const chapter = chapters.get(event.chapter_ref) || { expected: 0, verses: new Set() };
+    chapter.expected = Math.max(chapter.expected, Number(event.chapter_size) || 0);
+    chapter.verses.add(event.verse_ref);
+    chapters.set(event.chapter_ref, chapter);
+  }
+
+  const qualifyingDays = new Set();
+  for (const [day, chapters] of chaptersByDay) {
+    if ([...chapters.values()].some((chapter) => chapter.expected > 0 && chapter.verses.size >= chapter.expected)) {
+      qualifyingDays.add(day);
+    }
+  }
+
+  let cursor = readingDayNumber(Date.now());
+  if (cursor == null) return 0;
+  if (!qualifyingDays.has(cursor)) cursor--;
+  let streak = 0;
+  while (qualifyingDays.has(cursor)) {
+    streak++;
+    cursor--;
+  }
+  return streak;
+}
+
+function renderReadingStreak() {
+  const stars = [...el.streakStars.children];
+  if (readingStreakDays == null) {
+    stars.forEach((star) => star.classList.remove("is-lit"));
+    const label = userName ? "Se încarcă progresul…" : "Conectează-te ca să vezi streakul";
+    el.streakCaption.textContent = label;
+    el.streakStars.setAttribute("aria-label", label);
+    return;
+  }
+
+  const daysTowardBonus = readingStreakDays === 0 ? 0 : ((readingStreakDays - 1) % 7) + 1;
+  stars.forEach((star, index) => star.classList.toggle("is-lit", index < daysTowardBonus));
+  const nextBonusIn = 7 - (readingStreakDays % 7);
+  const detail = readingStreakDays === 0
+    ? "0 zile la rând · completează un capitol pentru prima zi"
+    : `${readingStreakDays} ${readingStreakDays === 1 ? "zi" : "zile"} la rând · bonusul următor în ${nextBonusIn} ${nextBonusIn === 1 ? "zi" : "zile"}`;
+  el.streakCaption.textContent = detail;
+  el.streakStars.setAttribute("aria-label", `${daysTowardBonus} din 7 stele aprinse. ${detail}`);
+}
+
+async function refreshReadingStreak({ afterWrite = false } = {}) {
+  if (!userName || !Tracker.enabled) {
+    readingStreakDays = null;
+    renderReadingStreak();
+    return;
+  }
+  if (streakFetchPromise) {
+    if (!afterWrite) return streakFetchPromise;
+    await streakFetchPromise;
+  }
+  const requestedUser = userName;
+  renderReadingStreak();
+  streakFetchPromise = (async () => {
+    try {
+      const readingData = await Tracker.fetchOwnReadingData();
+      if (requestedUser !== userName) return;
+      if (!readingData) return;
+      readingStreakDays = calculateReadingStreak(readingData.events, readingData.baselineAt);
+      renderReadingStreak();
+    } catch {
+      // Păstrăm ultima valoare confirmată când rețeaua e offline.
+      if (requestedUser === userName && readingStreakDays == null) {
+        const label = "Streakul nu este disponibil acum";
+        el.streakCaption.textContent = label;
+        el.streakStars.setAttribute("aria-label", label);
+      }
+    }
+  })().finally(() => {
+    streakFetchPromise = null;
+  });
+  return streakFetchPromise;
+}
+
 function buildVerseCard(v) {
   const card = document.createElement("section");
   card.className = "card";
@@ -566,7 +673,7 @@ function checkAnswers() {
       announceStreak: true,
       localScoreBefore: scoreBefore,
       localGain: earned + bonus,
-    }));
+    })).then(() => refreshReadingStreak({ afterWrite: true }));
     celebrate(bonus);
   }
 }
@@ -639,6 +746,15 @@ function nextPage() {
 }
 
 function showFinal() {
+  // Ultima pagină rezolvată nu dovedește că toate paginile anterioare au
+  // fost salvate (ex. progres venit de pe alt dispozitiv, cu goluri).
+  const missingPage = firstUnsolvedPage(solvedThisCycle);
+  if (missingPage >= 0) {
+    page = missingPage;
+    save();
+    renderPage();
+    return;
+  }
   // A terminat toată cartea → ciclu nou. De acum versetele reluate aduc din nou
   // puncte (alt ciclu), dar în cadrul aceluiași ciclu reluarea nu adaugă nimic.
   cycle += 1;
@@ -678,6 +794,10 @@ function updateUserChip() {
   const name = Auth.currentUser();
   el.userName.textContent = name || "Conectează-te";
   el.logoutBtn.hidden = !name;
+  if (!name) {
+    readingStreakDays = null;
+    renderReadingStreak();
+  }
 }
 
 function showAuthModal() {
@@ -755,22 +875,22 @@ async function handleLogout() {
 
 // Calculează unde a rămas utilizatorul, din evenimentele lui din Supabase, DOAR
 // pentru ciclul curent (evenimentele din cicluri anterioare nu contează la
-// progres): cea mai avansată pagină atinsă în ciclul curent; dacă acea pagină e
-// complet rezolvată, continuă la următoarea. Întoarce -1 dacă nu are activitate.
-function resumePageFromEvents(events, curCycle) {
-  let far = -1;
-  const correct = new Set();
-  for (const e of events) {
-    if ((e.cycle == null ? 0 : e.cycle) !== curCycle) continue;
-    const p = REF_PAGE.get(e.verse_ref);
-    if (p != null && p > far) far = p;
-    if (e.correct) correct.add(e.verse_ref);
+// progres): prima pagină incompletă, inclusiv golurile dinaintea ultimei
+// pagini atinse. Întoarce -1 dacă nu are activitate în corpusul curent.
+function firstUnsolvedPage(solvedPages) {
+  for (let p = 0; p < totalPages; p++) {
+    if (!solvedPages.has(p)) return p;
   }
-  if (far < 0) return -1;
-  const pageRefs = VERSES.slice(far * PAGE_SIZE, far * PAGE_SIZE + PAGE_SIZE).map((v) => v.ref);
-  const pageDone = pageRefs.every((ref) => correct.has(ref));
-  if (pageDone && far + 1 < totalPages) return far + 1;
-  return far;
+  return -1;
+}
+
+function resumePageFromEvents(events, curCycle) {
+  const hasActivity = events.some((e) =>
+    (e.cycle == null ? 0 : e.cycle) === curCycle && REF_PAGE.has(e.verse_ref)
+  );
+  if (!hasActivity) return -1;
+  const missingPage = firstUnsolvedPage(computeSolvedPagesForCycle(events, curCycle));
+  return missingPage >= 0 ? missingPage : totalPages - 1;
 }
 
 // Pagini complet rezolvate corect în ciclul dat, calculate din evenimentele
@@ -817,11 +937,14 @@ async function syncProgressFromCloud() {
   progressSynced = true;
   try {
     await Tracker.flush();
+    // Nu înlocuim progresul local cu o copie cloud incompletă cât timp există
+    // răspunsuri ale contului care încă așteaptă trimiterea.
+    if (Tracker.hasPendingEvents()) throw new Error("Progress upload pending");
     const events = await Tracker.fetchUserEvents(userName);
+    refreshReadingStreak();
 
-    // Sincronizează ciclul curent de pe orice dispozitiv: cel mai mare dintre
-    // ciclul local, ciclul întâlnit în evenimente, ȘI ciclul autoritativ de
-    // pe server (scores.current_cycle). Doar evenimentele nu sunt de-ajuns —
+    // Sincronizează ciclul curent de pe orice dispozitiv, folosind ciclul
+    // autoritativ de pe server (scores.current_cycle). Doar evenimentele nu sunt de-ajuns —
     // dacă serverul a avansat ciclul (ex. printr-un recalcul manual) dar încă
     // nu există niciun eveniment nou ștampilat cu noua valoare, clientul ar
     // rămâne orb la avans și ar recalcula etern pe baza ciclului vechi.
@@ -831,8 +954,10 @@ async function syncProgressFromCloud() {
       if (c > cloudCycle) cloudCycle = c;
     }
     const serverCycle = await Tracker.fetchOwnCycle();
-    const newCycle = Math.max(cycle, cloudCycle, serverCycle ?? 0);
-    const cycleAdvanced = newCycle > cycle;
+    // Un final afișat prematur poate lăsa ciclul LOCAL înaintea serverului.
+    // După trimiterea cozii, serverul decide; altfel golurile nu se mai repară.
+    const newCycle = Math.max(cloudCycle, serverCycle ?? cycle);
+    const cycleChanged = newCycle !== cycle;
     cycle = newCycle;
 
     // Nu calculam scorul din evenimente in browser: totalul serverului include
@@ -845,9 +970,9 @@ async function syncProgressFromCloud() {
     saveSolvedThisCycle();
 
     const resume = resumePageFromEvents(events, cycle);
-    if (resume >= 0 && resume !== page) {
+    if (resume >= 0) {
       page = resume;
-    } else if (cycleAdvanced) {
+    } else if (cycleChanged) {
       // Ciclul a avansat pe server, dar încă nu există niciun eveniment nou
       // pentru el — reluarea nu are din ce ghici pagina, dar tot trebuie să
       // pornească de la începutul noului ciclu, nu să rămână pe ecranul de
@@ -858,7 +983,7 @@ async function syncProgressFromCloud() {
     if (hadMistake) setPageMistake();
     else clearPageMistake();
     save();
-    if (resume >= 0 || cycleAdvanced) renderPage();
+    if (resume >= 0 || cycleChanged) renderPage();
   } catch {
     // offline sau eroare — rămâne scorul/progresul local, se reîncearcă la login
     progressSynced = false;
@@ -1028,6 +1153,7 @@ function buildMyStatsPanel(myEvents) {
 /* --- Sărbători pe canvas, fără dependențe: confetti, artificii, bule, stele --- */
 const FX_COLORS = ["#f0b429", "#4c3aa3", "#2e9e5b", "#d64545", "#3e9be0", "#e07be0"];
 const FX_KINDS = ["confetti", "fireworks", "bubbles", "stars", "balloons"];
+let celebrationFrameId = null;
 
 function fxColor() {
   return FX_COLORS[Math.floor(Math.random() * FX_COLORS.length)];
@@ -1045,10 +1171,12 @@ function drawStar(ctx, r) {
 }
 
 // kind: unul din FX_KINDS sau omis = ales aleator, ca sărbătoarea să fie
-// mereu o mică surpriză. Durata ~2.5s, apoi canvas-ul se curăță singur.
+// mereu o mică surpriză. La final, întregul efect dispare treptat.
 function launchCelebration(kind) {
+  if (celebrationFrameId !== null) cancelAnimationFrame(celebrationFrameId);
   kind = kind || FX_KINDS[Math.floor(Math.random() * FX_KINDS.length)];
   const canvas = document.getElementById("confetti");
+  canvas.style.opacity = "1";
   const ctx = canvas.getContext("2d");
   const W = (canvas.width = window.innerWidth);
   const H = (canvas.height = window.innerHeight);
@@ -1158,8 +1286,14 @@ function launchCelebration(kind) {
   }
 
   const start = performance.now();
+  const duration = kind === "balloons" ? 6000 : 3200;
+  const fadeDuration = 900;
   function frame(now) {
     const t = now - start;
+    // Opacitatea canvas-ului estompează și dârele deja desenate, nu doar
+    // particulele noi. Smoothstep face începutul și sfârșitul tranziției line.
+    const fadeProgress = Math.max(0, Math.min(1, (t - duration + fadeDuration) / fadeDuration));
+    canvas.style.opacity = String(1 - fadeProgress * fadeProgress * (3 - 2 * fadeProgress));
     fadeFrame();
     for (const p of pieces) {
       if (kind === "confetti") {
@@ -1253,13 +1387,14 @@ function launchCelebration(kind) {
       }
     }
     // baloanele urcă lin, au nevoie de mai mult timp să traverseze ecranul
-    if (t < (kind === "balloons" ? 6000 : 3200)) {
-      requestAnimationFrame(frame);
+    if (t < duration) {
+      celebrationFrameId = requestAnimationFrame(frame);
     } else {
       ctx.clearRect(0, 0, W, H);
+      celebrationFrameId = null;
     }
   }
-  requestAnimationFrame(frame);
+  celebrationFrameId = requestAnimationFrame(frame);
 }
 
 /* --- Inițializare --- */

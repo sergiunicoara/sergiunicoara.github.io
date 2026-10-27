@@ -17,16 +17,19 @@
 -- dashboard-ului trebuie sa contina codul din SUPABASE_URL din js/config.js).
 --
 -- Fisiere incluse, in aceasta ordine:
---   supabase\00000000_baseline_schema.sql
---   supabase\20260903_01_verse_answer_key.sql
---   supabase\20260903_02_server_verified_events.sql
---   supabase\20260903_03_grant_authenticated.sql
---   supabase\20260903_04_fix_score_race_condition.sql
---   supabase\20260904_05_lock_down_anon_execute.sql
+--   supabase/00000000_baseline_schema.sql
+--   supabase/20260903_01_verse_answer_key.sql
+--   supabase/20260903_02_server_verified_events.sql
+--   supabase/20260903_03_grant_authenticated.sql
+--   supabase/20260903_04_fix_score_race_condition.sql
+--   supabase/20260904_05_lock_down_anon_execute.sql
+--   supabase/20260907_01_backfill_event_page_index.sql
+--   supabase/20260907_02_fix_completed_page_count_baseline.sql
+--   supabase/20261024_01_streak_day_starts_at_03.sql
 
 
 -- ============================================================================
--- supabase\00000000_baseline_schema.sql
+-- supabase/00000000_baseline_schema.sql
 -- ============================================================================
 
 -- Baseline: schema pe care clientul o presupune, dar care nu exista nicăieri
@@ -170,7 +173,7 @@ commit;
 
 
 -- ============================================================================
--- supabase\20260903_01_verse_answer_key.sql
+-- supabase/20260903_01_verse_answer_key.sql
 -- ============================================================================
 
 -- GENERAT AUTOMAT de scripts/build-answer-key.js — nu edita direct.
@@ -1727,7 +1730,7 @@ commit;
 
 
 -- ============================================================================
--- supabase\20260903_02_server_verified_events.sql
+-- supabase/20260903_02_server_verified_events.sql
 -- ============================================================================
 
 -- Scoruri cu adevărat derivate de server.
@@ -2186,7 +2189,7 @@ commit;
 
 
 -- ============================================================================
--- supabase\20260903_03_grant_authenticated.sql
+-- supabase/20260903_03_grant_authenticated.sql
 -- ============================================================================
 
 -- Fix: RLS policies without the underlying table-level GRANT block every
@@ -2217,7 +2220,7 @@ commit;
 
 
 -- ============================================================================
--- supabase\20260903_04_fix_score_race_condition.sql
+-- supabase/20260903_04_fix_score_race_condition.sql
 -- ============================================================================
 
 -- Fix: lost-update race in score recalculation.
@@ -2348,7 +2351,7 @@ commit;
 
 
 -- ============================================================================
--- supabase\20260904_05_lock_down_anon_execute.sql
+-- supabase/20260904_05_lock_down_anon_execute.sql
 -- ============================================================================
 
 -- Fix: get_public_leaderboard was callable by the unauthenticated `anon` role
@@ -2381,6 +2384,258 @@ revoke all on function public.compute_user_points(uuid, timestamptz) from anon;
 revoke all on function public.recalculate_score_for_user(uuid, text) from anon;
 revoke all on function public.recalculate_scores_after_event_insert() from anon;
 revoke all on function public.verify_event_before_insert() from anon;
+
+commit;
+
+
+-- ============================================================================
+-- supabase/20260907_01_backfill_event_page_index.sql
+-- ============================================================================
+
+-- Repară `events.page_index` / `page_size` / `chapter_ref` / `chapter_size`
+-- NULL pe rândurile scrise înainte de `20260813_server_derived_scores.sql`
+-- (care a adăugat page_index/page_size) și `20260813_daily_chapter_streak_bonus.sql`
+-- (chapter_ref/chapter_size) — ambele cu `alter table ... add column`, fără
+-- niciun backfill pentru rândurile deja existente.
+--
+-- Efect live, confirmat empiric pe un cont care terminase de mult întreaga
+-- carte (1505/1505 versete unice corecte, verificat client-side din
+-- verse_ref): `completed_page_count()` (20260903_02_server_verified_events.sql)
+-- cere explicit `e.page_index is not null`, deci orice pagină compusă din
+-- evenimente dinainte de migrarea care a adăugat coloana nu putea fi
+-- numărată NICIODATĂ ca terminată pe server. Rezultat: `scores.current_cycle`
+-- rămânea blocat pe 0 la nesfârșit — triggerul de la fiecare insert nou
+-- recalcula mereu „cartea nu e completă" și ștampila tot ce urma tot cu
+-- ciclul 0, oricât de mult se continua cititul. Clientul, care reconstruiește
+-- pagina din `verse_ref` (nu din `page_index`-ul stocat), vedea cartea 100%
+-- terminată și arăta mereu ecranul de final — vezi tasks/lessons.md.
+--
+-- NECESITĂ: 20260903_01_verse_answer_key.sql (sursa valorilor corecte) și
+-- 20260903_02_server_verified_events.sql (completed_page_count,
+-- recalculate_score_for_user).
+
+begin;
+
+update public.events e
+set page_index   = v.page_index,
+    page_size    = v.page_size,
+    chapter_ref  = v.chapter_ref,
+    chapter_size = v.chapter_size
+from public.verse_answers v
+where e.verse_ref = v.verse_ref
+  and e.page_index is null;
+
+-- Recalculează scorul — și, prin plasa de siguranță din
+-- recalculate_score_for_user (fișierul 02), ciclul — pentru fiecare
+-- utilizator afectat. Fără asta, cine era deja blocat pe ciclul 0 rămâne
+-- blocat până la următorul lui răspuns (care ar fi declanșat oricum
+-- verificarea, dar de ce să aștepte).
+do $$
+declare
+  v_user_id uuid;
+begin
+  for v_user_id in
+    select distinct user_id from public.events where user_id is not null
+  loop
+    perform public.recalculate_score_for_user(v_user_id);
+  end loop;
+end;
+$$;
+
+commit;
+
+
+-- ============================================================================
+-- supabase/20260907_02_fix_completed_page_count_baseline.sql
+-- ============================================================================
+
+-- completed_page_count() filtra dupa `recorded_at > p_baseline_at`, ca să nu
+-- dubleze PUNCTELE (baseline_points acoperă deja tot ce s-a întâmplat până la
+-- baseline_at — vezi 20260813_server_derived_scores.sql). Dar funcția asta nu
+-- calculează puncte — decide dacă o pagină a fost CITITĂ vreodată până la
+-- capăt, o întrebare despre istoricul real de citire, nu despre bani.
+--
+-- Efect: orice pagină terminată (răspunsuri corecte la toate versetele)
+-- exclusiv ÎNAINTE de baseline_at nu se putea număra niciodată ca terminată,
+-- indiferent cât se continua cititul după — confirmat live, pe un cont cu
+-- 1505/1505 versete corecte (istoric complet): 27 din 301 pagini erau
+-- terminate doar înainte de baseline, ceea ce ținea `current_cycle` blocat pe
+-- 0 la nesfârșit, chiar și după backfill-ul de page_index din
+-- 20260907_01_backfill_event_page_index.sql.
+--
+-- `compute_user_points()` — funcția care CHIAR calculează punctele — rămâne
+-- complet neatinsă; filtrarea ei după baseline_at e corectă și necesară.
+--
+-- Semnătura rămâne cu 3 parametri (compatibilă cu apelanții existenți din
+-- 20260903_02_server_verified_events.sql — trigger-ul și
+-- recalculate_score_for_user); p_baseline_at e acceptat dar ignorat.
+--
+-- NECESITĂ: 20260903_02_server_verified_events.sql.
+
+begin;
+
+create or replace function public.completed_page_count(
+  p_user_id uuid,
+  p_cycle integer,
+  p_baseline_at timestamptz
+)
+returns integer
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select count(*)::integer
+  from (
+    select e.page_index
+    from public.events e
+    where e.user_id = p_user_id
+      and coalesce(e.cycle, 0) = p_cycle
+      and e.correct is true
+      and e.page_index is not null
+    group by e.page_index
+    having count(distinct e.verse_ref) >= coalesce(max(e.page_size), 5)
+  ) done;
+$$;
+
+-- Recalculează — scorul rămâne identic (compute_user_points e neschimbat),
+-- dar ciclul se poate acum, în sfârșit, avansa corect prin plasa de
+-- siguranță din recalculate_score_for_user.
+do $$
+declare
+  v_user_id uuid;
+begin
+  for v_user_id in
+    select distinct user_id from public.events where user_id is not null
+  loop
+    perform public.recalculate_score_for_user(v_user_id);
+  end loop;
+end;
+$$;
+
+commit;
+
+
+-- ============================================================================
+-- supabase/20261024_01_streak_day_starts_at_03.sql
+-- ============================================================================
+
+-- Ziua de streak incepe la 03:00, ora Europe/Bucharest.
+-- Conversia in ora locala preceda scaderea celor 3 ore, inclusiv la DST.
+-- Formula pentru versete si pagini este pastrata; se schimba doar ziua bonusului.
+begin;
+
+create or replace function public.compute_user_points(
+  p_user_id uuid,
+  p_baseline_at timestamptz
+)
+returns integer
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  with first_correct as (
+    select
+      coalesce(e.cycle, 0) as cycle_number,
+      e.page_index,
+      e.verse_ref,
+      min(e.created_at) as first_correct_at
+    from public.events e
+    where e.user_id = p_user_id
+      and e.correct is true
+      and e.recorded_at > p_baseline_at
+    group by coalesce(e.cycle, 0), e.page_index, e.verse_ref
+  ),
+  page_requirements as (
+    select
+      coalesce(e.cycle, 0) as cycle_number,
+      e.page_index,
+      max(e.page_size) as expected_answers
+    from public.events e
+    where e.user_id = p_user_id
+      and e.recorded_at > p_baseline_at
+      and e.page_index is not null
+      and e.page_size is not null
+    group by coalesce(e.cycle, 0), e.page_index
+  ),
+  completed_pages as (
+    select
+      r.cycle_number,
+      r.page_index,
+      r.expected_answers,
+      count(f.verse_ref) as correct_answers,
+      max(f.first_correct_at) as completed_at
+    from page_requirements r
+    left join first_correct f
+      on f.cycle_number = r.cycle_number
+      and f.page_index = r.page_index
+    group by r.cycle_number, r.page_index, r.expected_answers
+  ),
+  clean_page_bonus as (
+    select count(*) * 20 as bonus
+    from completed_pages p
+    where p.correct_answers >= p.expected_answers
+      and not exists (
+        select 1
+        from public.events wrong
+        where wrong.user_id = p_user_id
+          and wrong.recorded_at > p_baseline_at
+          and coalesce(wrong.cycle, 0) = p.cycle_number
+          and wrong.page_index = p.page_index
+          and wrong.correct is false
+          and wrong.created_at < p.completed_at
+      )
+  ),
+  daily_chapters as (
+    select
+      ((e.recorded_at at time zone 'Europe/Bucharest') - interval '3 hours')::date as reading_date,
+      e.chapter_ref,
+      max(e.chapter_size) as expected_verses,
+      count(distinct e.verse_ref) filter (where e.correct is true) as correct_verses
+    from public.events e
+    where e.user_id = p_user_id
+      and e.recorded_at > p_baseline_at
+      and e.chapter_ref is not null
+      and e.chapter_size is not null
+    group by ((e.recorded_at at time zone 'Europe/Bucharest') - interval '3 hours')::date, e.chapter_ref
+  ),
+  qualifying_days as (
+    select distinct reading_date
+    from daily_chapters
+    where correct_verses >= expected_verses
+  ),
+  sequenced_days as (
+    select
+      reading_date,
+      reading_date - row_number() over (order by reading_date)::integer as streak_group
+    from qualifying_days
+  ),
+  streaks as (
+    select count(*)::integer as day_count
+    from sequenced_days
+    group by streak_group
+  ),
+  streak_bonus as (
+    select coalesce(sum((day_count / 7) * 2000), 0) as bonus
+    from streaks
+  )
+  select (
+      (select count(*) * 10 from first_correct)
+    + coalesce((select bonus from clean_page_bonus), 0)
+    + coalesce((select bonus from streak_bonus), 0)
+  )::integer;
+$$;
+
+do $$
+declare
+  v_user_id uuid;
+begin
+  for v_user_id in select user_id from public.scores where user_id is not null loop
+    perform public.recalculate_score_for_user(v_user_id);
+  end loop;
+end;
+$$;
 
 commit;
 
