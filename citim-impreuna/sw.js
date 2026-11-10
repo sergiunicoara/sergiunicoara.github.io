@@ -1,105 +1,21 @@
-// Keep these URLs in lock-step with the cache-busted URLs in index.html.
-// CacheStorage matches query strings, so precaching `js/app.js` does not make
-// `js/app.js?v=54` available on a fresh offline install.
-const CACHE = "citim-impreuna-v86";
-const ASSETS = [
-  ".",
-  "index.html",
-  "css/style.css?v=51",
-  "js/config.js?v=44",
-  "js/auth.js?v=46",
-  "js/scenes.js?v=44",
-  "js/verses-1samuel.js?v=44",
-  "js/verses-2samuel.js?v=44",
-  "js/verses.js?v=44",
-  "js/tracker.js?v=56",
-  "js/pagination.js?v=1",
-  "js/app.js?v=66",
-  "manifest.webmanifest",
-  "icons/icon.svg",
-  "media/bible-book.jpg?v=2",
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
-  self.skipWaiting();
-});
-
+// Mută și instalările vechi către adresa unică a aplicației.
+const APP_URL = "https://talantul-in-negot.github.io/citim-impreuna/";
+self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-      )
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  // Doar fișierele proprii (GET); apelurile către Supabase trec neatinse
-  // (cache.put nu acceptă POST, iar statisticile nu trebuie servite din cache).
-  if (event.request.method !== "GET" || !event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
-  // Rețea întâi, ca actualizările să apară imediat; recurge la cache doar offline.
-  // `cache: "no-store"` ocolește și cache-ul HTTP obișnuit al browserului —
-  // fără el, "rețea întâi" tot putea întoarce un răspuns vechi din cache-ul
-  // browserului cât timp Cache-Control (max-age=600 pe GitHub Pages) nu
-  // expirase, chiar dacă acest fetch handler rula corect.
-  event.respondWith(
-    fetch(event.request, { cache: "no-store" })
-      .then((response) => {
-        // Doar răspunsurile bune intră în cache. Un 404/500 servit în timpul
-        // unui deploy ar deveni altfel varianta offline, până la următorul
-        // CACHE nou.
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request))
-  );
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
-      const existing = windows.find((client) => client.url.startsWith(self.location.origin));
-      return existing ? existing.focus() : clients.openWindow("./");
-    })
-  );
-});
-
-// Chromium-based PWAs may wake the service worker through Periodic Background
-// Sync. This is best-effort (the browser controls cadence); the page timer in
-// app.js remains the fallback where this API is unavailable.
-self.addEventListener("periodicsync", (event) => {
-  if (event.tag !== "citim-daily-reminder") return;
   event.waitUntil((async () => {
-    const enabled = await new Promise((resolve) => {
-      try {
-        const request = indexedDB.open("citim-impreuna-settings", 1);
-        request.onerror = () => resolve(false);
-        request.onupgradeneeded = () => request.result.createObjectStore("settings");
-        request.onsuccess = () => {
-          const db = request.result;
-          const get = db.transaction("settings", "readonly").objectStore("settings").get("daily-reminder");
-          get.onsuccess = () => { resolve(Boolean(get.result?.enabled)); db.close(); };
-          get.onerror = () => { resolve(false); db.close(); };
-        };
-      } catch { resolve(false); }
-    });
-    if (enabled) {
-      await self.registration.showNotification("E timpul pentru citirea de azi 📖", {
-        body: "Deschide Citim împreună și citește următorul capitol.",
-        icon: "icons/icon.svg",
-        badge: "icons/icon.svg",
-        tag: "citim-impreuna-daily-reminder",
-        renotify: true,
-      });
-    }
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    await Promise.allSettled(windows
+      .filter((client) => client.url.startsWith(self.registration.scope))
+      .map((client) => client.navigate(APP_URL)));
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames
+      .filter((name) => name.startsWith("citim-impreuna-"))
+      .map((name) => caches.delete(name)));
+    await self.registration.unregister();
   })());
+});
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode === "navigate" && event.request.url.startsWith(self.registration.scope)) {
+    event.respondWith(Response.redirect(APP_URL, 302));
+  }
 });
