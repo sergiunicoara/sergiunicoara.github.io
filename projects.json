@@ -253,5 +253,13 @@
     "readme_url": "https://raw.githubusercontent.com/sergiu123456789/Dimensionality-reduction/main/Principal%20Component%20Analysis%20PCA.md",
     "tags": ["PCA"],
     "summary": "Principal Component Analysis for feature compression."
+  },
+
+  {
+    "title": "Supersede",
+    "repo": "supersede",
+    "readme_url": "https://raw.githubusercontent.com/sergiunicoara/supersede/main/README.md",
+    "tags": ["Agent Memory", "MCP", "Relate", "Neo4j"],
+    "summary": "Revision-aware agent memory on Relate by Neo4j (hackathon entry, Nov 2026): https://github.com/sergiunicoara/supersede"
   }
 ]
